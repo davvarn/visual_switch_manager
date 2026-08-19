@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
   <style>
     :root {
-      --bg-color: #0f172a;
+      --bg-color: #0b1120;
       --card-bg: #1e293b;
       --card-hover: #334155;
       --accent: #38bdf8;
@@ -22,560 +22,145 @@
       --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-
-    /* Header & Navigation */
     header {
-      background-color: rgba(30, 41, 59, 0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.85rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      background-color: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-    }
-
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
     .brand-icon {
-      width: 42px;
-      height: 42px;
-      background: var(--accent-gradient);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      color: white;
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+      width: 40px; height: 40px; background: var(--accent-gradient); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: white;
     }
+    .brand-title h1 { font-size: 1.15rem; font-weight: 700; color: #f8fafc; }
+    .brand-title p { font-size: 0.75rem; color: var(--text-muted); }
 
-    .brand-title h1 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(90deg, #f8fafc, #cbd5e1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .brand-title p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .nav-tabs {
-      display: flex;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.25rem;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-      gap: 0.25rem;
-    }
-
+    .nav-tabs { display: flex; background: rgba(15, 23, 42, 0.6); padding: 0.25rem; border-radius: 10px; border: 1px solid var(--border-color); gap: 0.25rem; }
     .nav-tab {
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      padding: 0.5rem 0.9rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.4rem;
     }
-
-    .nav-tab:hover {
-      color: var(--text-main);
-    }
-
-    .nav-tab.active {
-      background: var(--card-bg);
-      color: var(--accent);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .status-group {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+    .nav-tab:hover { color: var(--text-main); }
+    .nav-tab.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 
     .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #34d399;
-      background: rgba(52, 211, 153, 0.1);
-      border: 1px solid rgba(52, 211, 153, 0.25);
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
+      display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600;
+      color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.25);
+      padding: 0.35rem 0.75rem; border-radius: 9999px;
     }
+    .status-dot { width: 7px; height: 7px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); }
 
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      background-color: var(--success);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--success);
-    }
+    main { flex: 1; padding: 1.25rem; max-width: 1440px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 360px 1fr; gap: 1.25rem; }
+    @media (max-width: 1024px) { main { grid-template-columns: 1fr; } }
 
-    /* Main Container */
-    main {
-      flex: 1;
-      padding: 1.5rem;
-      max-width: 1400px;
-      margin: 0 auto;
-      width: 100%;
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 1.5rem;
-    }
+    .sidebar-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+    .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; box-shadow: var(--shadow-lg); }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
 
-    @media (max-width: 1024px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Left Sidebar: Device Directory */
-    .sidebar-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.25rem;
-      box-shadow: var(--shadow-lg);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .search-box {
-      width: 100%;
-      position: relative;
-      margin-bottom: 0.85rem;
-    }
-
+    .search-box { width: 100%; position: relative; margin-bottom: 0.85rem; }
     .search-box input {
-      width: 100%;
-      padding: 0.6rem 0.85rem 0.6rem 2.2rem;
-      background: #0f172a;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      color: var(--text-main);
-      font-size: 0.85rem;
-      outline: none;
-      transition: border-color 0.2s;
+      width: 100%; padding: 0.6rem 0.85rem 0.6rem 2.2rem; background: #0f172a;
+      border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;
     }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 
-    .search-box input:focus {
-      border-color: var(--accent);
-    }
-
-    .search-box i {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 1rem;
-    }
-
-    .device-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-      max-height: 540px;
-      overflow-y: auto;
-      padding-right: 0.25rem;
-    }
-
+    .device-list { display: flex; flex-direction: column; gap: 0.6rem; max-height: 560px; overflow-y: auto; padding-right: 0.25rem; }
     .device-item {
-      padding: 0.85rem 1rem;
-      background-color: rgba(15, 23, 42, 0.4);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      position: relative;
-      overflow: hidden;
+      padding: 0.75rem 0.85rem; background-color: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color);
+      border-radius: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem;
     }
+    .device-item:hover { border-color: rgba(56, 189, 248, 0.5); background-color: rgba(56, 189, 248, 0.05); }
+    .device-item.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(129, 140, 248, 0.08)); box-shadow: inset 3px 0 0 var(--accent); }
 
-    .device-item:hover {
-      border-color: rgba(56, 189, 248, 0.5);
-      background-color: rgba(56, 189, 248, 0.05);
-      transform: translateY(-1px);
-    }
+    .device-thumb { width: 38px; height: 38px; background: #0f172a; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--accent); border: 1px solid var(--border-color); flex-shrink: 0; }
+    .device-info { flex: 1; min-width: 0; }
+    .device-info h4 { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .device-info p { font-size: 0.72rem; color: var(--text-muted); }
 
-    .device-item.active {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(129, 140, 248, 0.08));
-      box-shadow: inset 3px 0 0 var(--accent);
-    }
-
-    .device-thumb {
-      width: 42px;
-      height: 42px;
-      background: #0f172a;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      color: var(--accent);
-      border: 1px solid var(--border-color);
-      flex-shrink: 0;
-    }
-
-    .device-info {
-      flex: 1;
-    }
-
-    .device-info h4 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .device-info p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 0.15rem;
-    }
-
-    .protocol-tag {
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      background: #334155;
-      color: #e2e8f0;
-      text-transform: uppercase;
-    }
-
+    .protocol-tag { font-size: 0.62rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 6px; text-transform: uppercase; }
     .tag-z2m { background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); }
     .tag-zha { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .tag-matter { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .tag-bthome { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
 
-    /* Center Visual Blueprint Canvas */
-    .editor-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
+    .editor-panel { display: flex; flex-direction: column; gap: 1.25rem; }
 
     .blueprint-canvas {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem;
-      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-      min-height: 400px;
-      position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 2rem 1.5rem; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border-radius: 16px; border: 1px solid var(--border-color); min-height: 440px; position: relative;
+    }
+    .canvas-instructions { position: absolute; top: 1rem; left: 1.25rem; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
+
+    /* SVG Hover & Selection */
+    .interactive-element { cursor: pointer; transition: all 0.2s ease; }
+    .interactive-element:hover { fill-opacity: 0.85; stroke: var(--accent) !important; stroke-width: 3px !important; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7)); }
+    .interactive-element.configured { stroke: var(--success) !important; stroke-width: 2.5px !important; }
+
+    /* Action Modal Popup */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 100;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;
+      width: 90%; max-width: 620px; padding: 1.5rem; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 1rem;
     }
 
-    .canvas-instructions {
-      position: absolute;
-      top: 1rem;
-      left: 1.25rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    /* SVG Remote Control Renderers */
-    .remote-casing {
-      filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
-      transition: transform 0.3s ease;
-    }
-
-    .remote-casing:hover {
-      transform: scale(1.01);
-    }
-
-    .interactive-element {
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .interactive-element:hover {
-      fill-opacity: 0.85;
-      stroke: var(--accent) !important;
-      stroke-width: 2.5px !important;
-      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
-    }
-
-    .interactive-element.active {
-      fill: var(--accent) !important;
-      stroke: #ffffff !important;
-      stroke-width: 3px !important;
-      filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.9));
-    }
-
-    /* Action Mapping Drawer */
-    .action-drawer {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .action-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .form-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; }
 
     select, input {
-      width: 100%;
-      background: #0f172a;
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 0.65rem 0.85rem;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      outline: none;
-      transition: all 0.2s;
+      width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: var(--text-main);
+      padding: 0.65rem 0.85rem; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s;
     }
-
-    select:focus, input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-    }
+    select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
 
     .btn {
-      padding: 0.65rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s;
+      padding: 0.65rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      border: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;
     }
+    .btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25); }
+    .btn-primary:hover { background: linear-gradient(135deg, #0284c7, #6366f1); transform: translateY(-1px); }
+    .btn-secondary { background: #334155; color: var(--text-main); }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
 
-    .btn-primary {
-      background: var(--accent-gradient);
-      color: white;
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
-    }
+    /* Mappings Table View */
+    .mappings-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
+    .mappings-table th, .mappings-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .mappings-table th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.4); }
 
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #0284c7, #6366f1);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: #334155;
-      color: var(--text-main);
-    }
-
-    .btn-secondary:hover {
-      background: #475569;
-    }
-
-    .btn-danger {
-      background: rgba(248, 113, 113, 0.15);
-      color: var(--danger);
-      border: 1px solid rgba(248, 113, 113, 0.3);
-    }
-
-    .btn-danger:hover {
-      background: rgba(248, 113, 113, 0.25);
-    }
-
-    /* Mappings Table */
-    .mappings-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-    }
-
-    .mappings-table th, .mappings-table td {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .mappings-table th {
-      color: var(--text-muted);
-      font-weight: 600;
-      background: rgba(15, 23, 42, 0.4);
-    }
-
-    .action-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-    }
-
-    /* Event Terminal */
-    .event-terminal {
-      background: #090d16;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 0.85rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.75rem;
-      color: #34d399;
-      height: 120px;
-      overflow-y: auto;
-      line-height: 1.5;
-    }
-
-    .terminal-line {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .terminal-time {
-      color: var(--text-muted);
-    }
-
-    /* Modal for Blueprint Export */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      width: 90%;
-      max-width: 680px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .code-preview {
-      background: #090d16;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 1rem;
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: #e2e8f0;
-      height: 300px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
+    .event-terminal { background: #090d16; border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem; font-family: monospace; font-size: 0.75rem; color: #34d399; height: 110px; overflow-y: auto; }
+    .code-preview { background: #090d16; border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; font-family: monospace; font-size: 0.8rem; color: #e2e8f0; height: 280px; overflow-y: auto; white-space: pre-wrap; }
   </style>
 </head>
 <body>
 
-  <!-- Header Navigation -->
+  <!-- Header -->
   <header>
     <div class="brand">
-      <div class="brand-icon">
-        <i class="mdi mdi-remote"></i>
-      </div>
+      <div class="brand-icon"><i class="mdi mdi-remote"></i></div>
       <div class="brand-title">
         <h1>Visual Switch Manager</h1>
-        <p>Interactive Device Blueprint & Automation Studio</p>
+        <p>Device Blueprint & Automation Studio</p>
       </div>
     </div>
 
     <div class="nav-tabs">
-      <div class="nav-tab active" onclick="switchTab('editor')">
+      <div class="nav-tab active" id="tabEditor" onclick="switchTab('editor')">
         <i class="mdi mdi-vector-square"></i> Visual Editor
       </div>
-      <div class="nav-tab" onclick="switchTab('mappings')">
-        <i class="mdi mdi-table-cog"></i> Active Mappings
+      <div class="nav-tab" id="tabMappings" onclick="switchTab('mappings')">
+        <i class="mdi mdi-table-cog"></i> Active Mappings (<span id="mappingsCount">0</span>)
       </div>
       <div class="nav-tab" onclick="openBlueprintModal()">
         <i class="mdi mdi-code-json"></i> Export Blueprint YAML
@@ -585,218 +170,159 @@
     <div class="status-group">
       <div class="status-badge">
         <div class="status-dot"></div>
-        <span>Listening on ZHA & MQTT</span>
+        <span id="haConnectionStatus">Connected to Home Assistant</span>
       </div>
     </div>
   </header>
 
-  <!-- Main Workspace -->
+  <!-- Workspace -->
   <main>
-    <!-- Left Panel: Switch Catalog -->
+    <!-- Left Sidebar: Device Catalog -->
     <div class="sidebar-panel">
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <i class="mdi mdi-devices" style="color: var(--accent);"></i> Discovered Switches
+            <i class="mdi mdi-devices" style="color: var(--accent);"></i> Supported Devices
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted);" id="deviceCount">6 Supported</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);" id="deviceCount">21 Models</span>
         </div>
 
         <div class="search-box">
           <i class="mdi mdi-magnify"></i>
-          <input type="text" id="deviceSearch" placeholder="Search IKEA, Hue, Aqara..." oninput="filterDevices()">
+          <input type="text" id="deviceSearch" placeholder="Filter IKEA, Hue, Aqara, Matter..." oninput="filterDevices()">
         </div>
 
         <div class="device-list" id="deviceListContainer">
-          <!-- IKEA BILRESA Scrollwheel (Featured) -->
-          <div class="device-item active" onclick="selectDevice('bilresa_wheel')">
-            <div class="device-thumb">
-              <i class="mdi mdi-circle-double"></i>
-            </div>
-            <div class="device-info">
-              <h4>IKEA BILRESA Scrollwheel</h4>
-              <p>E2201 • Scroll & Scene Button</p>
-            </div>
-            <span class="protocol-tag tag-z2m">Z2M/ZHA</span>
-          </div>
-
-          <!-- IKEA BILRESA 2-Button (Featured) -->
-          <div class="device-item" onclick="selectDevice('bilresa_2btn')">
-            <div class="device-thumb">
-              <i class="mdi mdi-gesture-tap-button"></i>
-            </div>
-            <div class="device-info">
-              <h4>IKEA BILRESA 2-Button</h4>
-              <p>E2202 • Dual Button Switch</p>
-            </div>
-            <span class="protocol-tag tag-z2m">Z2M/ZHA</span>
-          </div>
-
-          <!-- IKEA STYRBAR -->
-          <div class="device-item" onclick="selectDevice('styrbar')">
-            <div class="device-thumb">
-              <i class="mdi mdi-view-grid-outline"></i>
-            </div>
-            <div class="device-info">
-              <h4>IKEA STYRBAR Remote</h4>
-              <p>E2001 / E2002 • 4 Buttons</p>
-            </div>
-            <span class="protocol-tag tag-z2m">Z2M</span>
-          </div>
-
-          <!-- IKEA SYMFONISK Dial -->
-          <div class="device-item" onclick="selectDevice('symfonisk')">
-            <div class="device-thumb">
-              <i class="mdi mdi-knob"></i>
-            </div>
-            <div class="device-info">
-              <h4>IKEA SYMFONISK Dial</h4>
-              <p>E1744 • Rotary Sound Switch</p>
-            </div>
-            <span class="protocol-tag tag-zha">ZHA</span>
-          </div>
-
-          <!-- Philips Hue Dimmer -->
-          <div class="device-item" onclick="selectDevice('hue_dimmer')">
-            <div class="device-thumb">
-              <i class="mdi mdi-lightbulb-remote-outline"></i>
-            </div>
-            <div class="device-info">
-              <h4>Philips Hue Dimmer V2</h4>
-              <p>RWL022 • 4 Button Switch</p>
-            </div>
-            <span class="protocol-tag tag-zha">ZHA</span>
-          </div>
+          <!-- Populated by JavaScript -->
         </div>
       </div>
 
-      <!-- Live Event Stream Monitor -->
+      <!-- Event Stream Monitor -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <i class="mdi mdi-console-line" style="color: var(--success);"></i> Event Stream
+            <i class="mdi mdi-console-line" style="color: var(--success);"></i> Live Bus Monitor
           </div>
           <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="clearLogs()">Clear</button>
         </div>
         <div class="event-terminal" id="eventTerminal">
-          <div class="terminal-line">
-            <span class="terminal-time">[18:03:00]</span>
-            <span>Listening on zha_event & mqtt_message bus...</span>
-          </div>
+          <div style="color: var(--text-muted);">[System] Listening for ZHA, Z2M, & Matter events...</div>
         </div>
       </div>
     </div>
 
-    <!-- Center Canvas & Action Editor -->
-    <div class="editor-panel">
-      <!-- Blueprint Visual Renderer -->
+    <!-- Center Canvas View -->
+    <div class="editor-panel" id="viewEditor">
       <div class="blueprint-canvas">
         <div class="canvas-instructions">
-          <i class="mdi mdi-information-outline"></i>
-          <span>Click any button or wheel region on the device to map actions</span>
+          <i class="mdi mdi-cursor-default-click-outline" style="color: var(--accent); font-size: 1.1rem;"></i>
+          <span>Click any button or wheel region on the physical remote to configure its action</span>
         </div>
 
-        <div id="deviceSvgContainer" style="margin-top: 1rem;">
-          <!-- SVG is dynamically injected here -->
+        <div id="deviceSvgContainer" style="margin-top: 1.5rem;">
+          <!-- Dynamically injected SVG -->
         </div>
       </div>
+    </div>
 
-      <!-- Action Configuration Drawer -->
-      <div class="action-drawer">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <div class="card-title" id="selectedTargetTitle">
-            <i class="mdi mdi-target-account" style="color: var(--accent);"></i> Target: Wheel Click / Center
+    <!-- Active Mappings View (Tab Content) -->
+    <div class="editor-panel" id="viewMappings" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="mdi mdi-table-cog" style="color: var(--accent);"></i> Active Action Mappings
           </div>
-          <span style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); color: var(--accent); padding: 0.2rem 0.6rem; border-radius: 6px;" id="selectedClickType">
-            Single Press
-          </span>
-        </div>
-
-        <div class="action-grid">
-          <!-- Click Trigger Type -->
-          <div class="form-group">
-            <label for="clickTrigger">
-              <i class="mdi mdi-gesture-tap"></i> Trigger Interaction:
-            </label>
-            <select id="clickTrigger" onchange="updateTriggerMode()">
-              <option value="press">Single Press / Click</option>
-              <option value="double">Double Press</option>
-              <option value="hold">Long Press / Hold</option>
-              <option value="rotate_cw">Rotate Clockwise (Turn Right)</option>
-              <option value="rotate_ccw">Rotate Counter-Clockwise (Turn Left)</option>
-            </select>
-          </div>
-
-          <!-- Action Category / Domain -->
-          <div class="form-group">
-            <label for="actionCategory">
-              <i class="mdi mdi-shape-outline"></i> Action Category:
-            </label>
-            <select id="actionCategory" onchange="updateActionServices()">
-              <option value="light">💡 Light & Lighting</option>
-              <option value="scene">🎭 Scene & Presets</option>
-              <option value="media_player">🎵 Media & Audio</option>
-              <option value="automation">⚙️ Automation & Script</option>
-              <option value="switch">🔌 Switch & Outlet</option>
-            </select>
-          </div>
-
-          <!-- Service Action -->
-          <div class="form-group">
-            <label for="actionService">
-              <i class="mdi mdi-lightning-bolt-outline"></i> Action Service:
-            </label>
-            <select id="actionService">
-              <option value="light.toggle">Toggle Light</option>
-              <option value="light.turn_on">Turn On (100%)</option>
-              <option value="light.turn_off">Turn Off</option>
-              <option value="light.brightness_up">Brightness +10%</option>
-              <option value="light.brightness_down">Brightness -10%</option>
-            </select>
-          </div>
-
-          <!-- Target Entity -->
-          <div class="form-group">
-            <label for="targetEntity">
-              <i class="mdi mdi-cube-outline"></i> Target Entity ID:
-            </label>
-            <input type="text" id="targetEntity" value="light.living_room_lights" placeholder="e.g. light.living_room, scene.movie_night">
-          </div>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-          <button class="btn btn-secondary" onclick="simulateEvent()">
-            <i class="mdi mdi-play-circle-outline"></i> Simulate Press Event
+          <button class="btn btn-primary" onclick="saveAllMappingsToHA()">
+            <i class="mdi mdi-cloud-upload"></i> Sync to Home Assistant
           </button>
-          
-          <div style="display: flex; gap: 0.75rem;">
-            <button class="btn btn-danger" onclick="removeCurrentMapping()">
-              <i class="mdi mdi-delete-outline"></i> Clear Mapping
-            </button>
-            <button class="btn btn-primary" onclick="saveCurrentMapping()">
-              <i class="mdi mdi-content-save-outline"></i> Save Action Mapping
-            </button>
-          </div>
         </div>
+
+        <table class="mappings-table">
+          <thead>
+            <tr>
+              <th>Device Model</th>
+              <th>Target Button / Component</th>
+              <th>Trigger Type</th>
+              <th>Action Service</th>
+              <th>Target Entity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mappingsTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
       </div>
     </div>
   </main>
 
-  <!-- Export Blueprint Modal -->
+  <!-- Interactive Action Configuration Popup Modal -->
+  <div class="modal-overlay" id="actionModal">
+    <div class="modal-card">
+      <div class="card-header">
+        <div class="card-title" id="actionModalTitle">
+          <i class="mdi mdi-cog-outline" style="color: var(--accent);"></i> Configure Button Action
+        </div>
+        <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" onclick="closeActionModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label for="clickTrigger"><i class="mdi mdi-gesture-tap"></i> Trigger Interaction:</label>
+        <select id="clickTrigger">
+          <option value="press">Single Press / Click</option>
+          <option value="double">Double Press</option>
+          <option value="hold">Long Press / Hold</option>
+          <option value="rotate_cw">Rotate Clockwise (Turn Right)</option>
+          <option value="rotate_ccw">Rotate Counter-Clockwise (Turn Left)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="actionCategory"><i class="mdi mdi-shape-outline"></i> Action Category:</label>
+        <select id="actionCategory" onchange="updateActionServices()">
+          <option value="light">💡 Light & Lighting</option>
+          <option value="scene">🎭 Scene & Presets</option>
+          <option value="media_player">🎵 Media & Audio</option>
+          <option value="automation">⚙️ Automation & Script</option>
+          <option value="switch">🔌 Switch & Outlet</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="actionService"><i class="mdi mdi-lightning-bolt-outline"></i> Service Action:</label>
+        <select id="actionService"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="targetEntity"><i class="mdi mdi-cube-outline"></i> Select Target Entity (Discovered from HA):</label>
+        <input type="text" id="targetEntityInput" list="haEntitiesDatalist" placeholder="Search or type entity ID (e.g. light.vardagsrum)">
+        <datalist id="haEntitiesDatalist"></datalist>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+        <button class="btn btn-danger" onclick="deleteCurrentActionModal()">
+          <i class="mdi mdi-delete-outline"></i> Delete Action
+        </button>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-secondary" onclick="closeActionModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveActionModal()">
+            <i class="mdi mdi-check"></i> Save Action
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blueprint YAML Modal -->
   <div class="modal-overlay" id="yamlModal">
     <div class="modal-card">
       <div class="card-header">
         <div class="card-title">
-          <i class="mdi mdi-file-code-outline" style="color: var(--accent);"></i> Generated Home Assistant Blueprint YAML
+          <i class="mdi mdi-file-code-outline" style="color: var(--accent);"></i> Home Assistant Blueprint YAML
         </div>
         <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem;" onclick="closeBlueprintModal()">✕</button>
       </div>
-      <p style="font-size: 0.8rem; color: var(--text-muted);">
-        Copy and save this YAML file under <code>/config/blueprints/automation/visual_switch_manager.yaml</code> in Home Assistant.
-      </p>
-      <div class="code-preview" id="yamlCodePreview">
-        <!-- Generated YAML code -->
-      </div>
+      <div class="code-preview" id="yamlCodePreview"></div>
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
         <button class="btn btn-secondary" onclick="closeBlueprintModal()">Close</button>
         <button class="btn btn-primary" onclick="copyYamlToClipboard()">
@@ -806,193 +332,148 @@
     </div>
   </div>
 
-  <!-- JavaScript Logic -->
+  <!-- Main JavaScript App -->
   <script>
-    // State store
+    // App State
     let currentDeviceId = 'bilresa_wheel';
-    let currentTargetId = 'wheel_center';
-    let currentTargetLabel = 'Scroll Wheel Center Press';
-    
-    // Mappings store
-    let mappings = {
-      'bilresa_wheel': {
-        'wheel_center': { trigger: 'press', service: 'light.toggle', entity: 'light.living_room_lights' },
-        'wheel_cw': { trigger: 'rotate_cw', service: 'light.brightness_up', entity: 'light.living_room_lights' },
-        'wheel_ccw': { trigger: 'rotate_ccw', service: 'light.brightness_down', entity: 'light.living_room_lights' },
-        'bottom_dots': { trigger: 'press', service: 'scene.turn_on', entity: 'scene.movie_night' }
-      },
-      'bilresa_2btn': {
-        'top_button': { trigger: 'press', service: 'light.turn_on', entity: 'light.bedroom_lights' },
-        'bottom_button': { trigger: 'press', service: 'light.turn_off', entity: 'light.bedroom_lights' }
-      }
+    let activeModalTarget = { id: '', label: '' };
+    let savedMappings = {};
+    let haEntities = [];
+
+    // Catalog of All Supported Devices (21 Models across Z2M, ZHA, Matter, BTHome)
+    const deviceCatalog = [
+      { id: 'bilresa_wheel', name: 'IKEA BILRESA Scrollwheel', model: 'E2201', protocol: 'Matter/Z2M', icon: 'mdi-circle-double', tagClass: 'tag-matter' },
+      { id: 'bilresa_2btn', name: 'IKEA BILRESA 2-Button', model: 'E2202', protocol: 'Matter/Z2M', icon: 'mdi-gesture-tap-button', tagClass: 'tag-matter' },
+      { id: 'styrbar', name: 'IKEA STYRBAR Remote', model: 'E2001/E2002', protocol: 'Z2M/ZHA', icon: 'mdi-view-grid-outline', tagClass: 'tag-z2m' },
+      { id: 'symfonisk', name: 'IKEA SYMFONISK Dial V1', model: 'E1744', protocol: 'ZHA', icon: 'mdi-knob', tagClass: 'tag-zha' },
+      { id: 'symfonisk_v2', name: 'IKEA SYMFONISK Sound Remote V2', model: 'E2123', protocol: 'Z2M/ZHA', icon: 'mdi-volume-medium', tagClass: 'tag-z2m' },
+      { id: 'tradfri_onoff', name: 'IKEA TRÅDFRI On/Off Dimmer', model: 'E1743', protocol: 'Z2M/ZHA', icon: 'mdi-toggle-switch-outline', tagClass: 'tag-z2m' },
+      { id: 'tradfri_5btn', name: 'IKEA TRÅDFRI 5-Button Remote', model: 'E1524', protocol: 'Z2M/ZHA', icon: 'mdi-rhombus-split', tagClass: 'tag-z2m' },
+      { id: 'somrig', name: 'IKEA SOMRIG 2-Button Shortcut', model: 'E2213', protocol: 'Matter/Z2M', icon: 'mdi-bookmark-outline', tagClass: 'tag-matter' },
+      { id: 'rodret', name: 'IKEA RODRET Dimmer Switch', model: 'E2201', protocol: 'Matter/Z2M', icon: 'mdi-plus-minus', tagClass: 'tag-matter' },
+
+      { id: 'hue_dimmer_v2', name: 'Philips Hue Dimmer V2', model: 'RWL022', protocol: 'ZHA/Z2M', icon: 'mdi-lightbulb-remote-outline', tagClass: 'tag-zha' },
+      { id: 'hue_dimmer_v1', name: 'Philips Hue Dimmer V1', model: 'RWL020', protocol: 'ZHA', icon: 'mdi-remote-desktop', tagClass: 'tag-zha' },
+      { id: 'hue_tap_dial', name: 'Philips Hue Tap Dial Switch', model: '8719514440937', protocol: 'Z2M/ZHA', icon: 'mdi-dialpad', tagClass: 'tag-z2m' },
+      { id: 'hue_smart_button', name: 'Philips Hue Smart Button', model: '9290022408', protocol: 'ZHA', icon: 'mdi-radiobox-marked', tagClass: 'tag-zha' },
+
+      { id: 'aqara_mini', name: 'Aqara Wireless Mini Switch', model: 'WXKG11LM', protocol: 'Z2M/ZHA', icon: 'mdi-checkbox-blank-circle-outline', tagClass: 'tag-z2m' },
+      { id: 'aqara_opple_6', name: 'Aqara Opple 6-Button Switch', model: 'WXCJKG13LM', protocol: 'Z2M/ZHA', icon: 'mdi-grid', tagClass: 'tag-z2m' },
+      { id: 'aqara_cube', name: 'Aqara Cube T1 Pro', model: 'CT-R01', protocol: 'Z2M/ZHA', icon: 'mdi-cube-outline', tagClass: 'tag-z2m' },
+
+      { id: 'shelly_blu', name: 'Shelly BLU Button1', model: 'BTHome', protocol: 'Matter/BTHome', icon: 'mdi-bluetooth', tagClass: 'tag-bthome' },
+      { id: 'shelly_wall', name: 'Shelly Wall Switch', model: 'Matter/WiFi', protocol: 'Matter', icon: 'mdi-wall-sconce-flat', tagClass: 'tag-matter' },
+
+      { id: 'sonoff_snzb', name: 'Sonoff SNZB-01 Wireless Switch', model: 'SNZB-01', protocol: 'Z2M/ZHA', icon: 'mdi-power-plug-outline', tagClass: 'tag-z2m' },
+      { id: 'tuya_4gang', name: 'Tuya 4-Gang Scene Switch', model: 'TS0044', protocol: 'Z2M/ZHA', icon: 'mdi-view-dashboard-variant-outline', tagClass: 'tag-z2m' },
+      { id: 'matter_generic', name: 'Matter Universal Button Remote', model: 'Generic Matter', protocol: 'Matter', icon: 'mdi-gate', tagClass: 'tag-matter' }
+    ];
+
+    // SVG Render Functions per Device
+    const svgRenderers = {
+      'bilresa_wheel': () => `
+        <svg class="remote-casing" width="190" height="320" viewBox="0 0 190 320" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="170" height="300" rx="85" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+          <rect x="14" y="14" width="162" height="292" rx="81" fill="#f1f5f9"/>
+
+          <!-- Scroll Wheel Top -->
+          <g class="interactive-element ${isConfigured('wheel_center')?'configured':''}" onclick="openActionModal('wheel_center', 'Scroll Wheel Center Press')">
+            <circle cx="95" cy="100" r="66" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="95" cy="100" r="40" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+            <text x="95" y="104" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">CLICK / PRESS</text>
+          </g>
+
+          <path class="interactive-element ${isConfigured('wheel_cw')?'configured':''}" onclick="openActionModal('wheel_cw', 'Rotate Wheel Clockwise (+)')"
+            d="M 132,54 A 58 58 0 0 1 153,105" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
+
+          <path class="interactive-element ${isConfigured('wheel_ccw')?'configured':''}" onclick="openActionModal('wheel_ccw', 'Rotate Wheel Counter-Clockwise (-)')"
+            d="M 58,54 A 58 58 0 0 0 37,105" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
+
+          <circle cx="95" cy="190" r="3" fill="#94a3b8"/>
+
+          <!-- Bottom Tactile Scene Button (Three Dots '...') -->
+          <g class="interactive-element ${isConfigured('bottom_dots')?'configured':''}" onclick="openActionModal('bottom_dots', 'Bottom Shell Button (Three Dots - Scene Toggle)')">
+            <rect x="42" y="222" width="106" height="52" rx="26" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <circle cx="79" cy="248" r="3.5" fill="#475569"/>
+            <circle cx="95" cy="248" r="3.5" fill="#475569"/>
+            <circle cx="111" cy="248" r="3.5" fill="#475569"/>
+            <text x="95" y="266" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">SCENE TOGGLE</text>
+          </g>
+        </svg>
+      `,
+      'bilresa_2btn': () => `
+        <svg class="remote-casing" width="180" height="310" viewBox="0 0 180 310" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="160" height="290" rx="80" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+          <rect x="14" y="14" width="152" height="282" rx="76" fill="#f1f5f9"/>
+
+          <g class="interactive-element ${isConfigured('top_button')?'configured':''}" onclick="openActionModal('top_button', 'Top Concave Button (ON / Dim Up)')">
+            <rect x="38" y="38" width="104" height="100" rx="50" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="90" cy="88" r="13" fill="none" stroke="#64748b" stroke-width="2.5"/>
+            <line x1="90" y1="79" x2="90" y2="97" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+
+          <circle cx="90" cy="155" r="3.5" fill="#64748b"/>
+
+          <g class="interactive-element ${isConfigured('bottom_button')?'configured':''}" onclick="openActionModal('bottom_button', 'Bottom Concave Button (OFF / Dim Down)')">
+            <rect x="38" y="174" width="104" height="100" rx="50" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="90" cy="224" r="11" fill="none" stroke="#64748b" stroke-width="2.5"/>
+          </g>
+        </svg>
+      `,
+      'styrbar': () => `
+        <svg class="remote-casing" width="180" height="300" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="160" height="280" rx="20" fill="#e2e8f0" stroke="#94a3b8" stroke-width="4"/>
+          <rect class="interactive-element ${isConfigured('top')?'configured':''}" onclick="openActionModal('top', 'Top Button (ON)')" x="20" y="20" width="140" height="80" rx="10" fill="#cbd5e1"/>
+          <text x="90" y="65" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▲ ON</text>
+          <rect class="interactive-element ${isConfigured('left')?'configured':''}" onclick="openActionModal('left', 'Left Arrow')" x="20" y="105" width="65" height="80" rx="10" fill="#cbd5e1"/>
+          <text x="52.5" y="150" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">◄</text>
+          <rect class="interactive-element ${isConfigured('right')?'configured':''}" onclick="openActionModal('right', 'Right Arrow')" x="95" y="105" width="65" height="80" rx="10" fill="#cbd5e1"/>
+          <text x="127.5" y="150" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">►</text>
+          <rect class="interactive-element ${isConfigured('bottom')?'configured':''}" onclick="openActionModal('bottom', 'Bottom Button (OFF)')" x="20" y="190" width="140" height="80" rx="10" fill="#cbd5e1"/>
+          <text x="90" y="235" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▼ OFF</text>
+        </svg>
+      `
     };
 
-    // Device Definitions & SVG Generators
-    const devices = {
-      'bilresa_wheel': {
-        name: 'IKEA BILRESA Scrollwheel',
-        model: 'E2201',
-        protocol: 'Zigbee2MQTT / ZHA',
-        renderSvg: () => `
-          <svg class="remote-casing" width="180" height="300" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg">
-            <!-- Pill Outer Casing -->
-            <rect x="10" y="10" width="160" height="280" rx="80" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
-            <rect x="14" y="14" width="152" height="272" rx="76" fill="#f1f5f9"/>
+    function isConfigured(targetId) {
+      return savedMappings[currentDeviceId] && savedMappings[currentDeviceId][targetId];
+    }
 
-            <!-- Top Circular Scroll Wheel -->
-            <g class="interactive-element ${currentTargetId==='wheel_center'?'active':''}" onclick="selectTarget('wheel_center', 'Scroll Wheel Center Press')">
-              <circle cx="90" cy="95" r="62" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
-              <circle cx="90" cy="95" r="38" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
-              <text x="90" y="99" font-family="sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">CLICK / PRESS</text>
-            </g>
+    // Populate Sidebar Device Catalog
+    function renderDeviceList() {
+      const container = document.getElementById('deviceListContainer');
+      container.innerHTML = '';
+      deviceCatalog.forEach(dev => {
+        const item = document.createElement('div');
+        item.className = `device-item ${dev.id === currentDeviceId ? 'active' : ''}`;
+        item.onclick = () => selectDevice(dev.id);
+        item.innerHTML = `
+          <div class="device-thumb"><i class="mdi ${dev.icon}"></i></div>
+          <div class="device-info">
+            <h4>${dev.name}</h4>
+            <p>${dev.model}</p>
+          </div>
+          <span class="protocol-tag ${dev.tagClass}">${dev.protocol}</span>
+        `;
+        container.appendChild(item);
+      });
+      document.getElementById('deviceCount').innerText = `${deviceCatalog.length} Models`;
+    }
 
-            <!-- Wheel Rotate Clockwise Arrow Indicator -->
-            <path class="interactive-element ${currentTargetId==='wheel_cw'?'active':''}" onclick="selectTarget('wheel_cw', 'Rotate Wheel Clockwise (+)')"
-              d="M 125,50 A 55 55 0 0 1 145,100" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
-
-            <!-- Wheel Rotate Counter-Clockwise Arrow Indicator -->
-            <path class="interactive-element ${currentTargetId==='wheel_ccw'?'active':''}" onclick="selectTarget('wheel_ccw', 'Rotate Wheel Counter-Clockwise (-)')"
-              d="M 55,50 A 55 55 0 0 0 35,100" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
-
-            <!-- Middle Subtle LED Light Dot -->
-            <circle cx="90" cy="180" r="3" fill="#94a3b8"/>
-
-            <!-- Bottom Tactile Scene Button (Three Dots '...') -->
-            <g class="interactive-element ${currentTargetId==='bottom_dots'?'active':''}" onclick="selectTarget('bottom_dots', 'Bottom Shell Button (Three Dots - Scene Toggle)')">
-              <rect x="40" y="210" width="100" height="48" rx="24" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
-              <circle cx="74" cy="234" r="3.5" fill="#475569"/>
-              <circle cx="90" cy="234" r="3.5" fill="#475569"/>
-              <circle cx="106" cy="234" r="3.5" fill="#475569"/>
-              <text x="90" y="252" font-family="sans-serif" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">SCENE TOGGLE</text>
-            </g>
-          </svg>
-        `
-      },
-      'bilresa_2btn': {
-        name: 'IKEA BILRESA 2-Button',
-        model: 'E2202',
-        protocol: 'Zigbee2MQTT / ZHA',
-        renderSvg: () => `
-          <svg class="remote-casing" width="170" height="300" viewBox="0 0 170 300" xmlns="http://www.w3.org/2000/svg">
-            <!-- Outer Casing -->
-            <rect x="10" y="10" width="150" height="280" rx="75" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
-            <rect x="14" y="14" width="142" height="272" rx="71" fill="#f1f5f9"/>
-
-            <!-- Top Oval Concave Button -->
-            <g class="interactive-element ${currentTargetId==='top_button'?'active':''}" onclick="selectTarget('top_button', 'Top Concave Button (ON / Dim Up)')">
-              <rect x="35" y="35" width="100" height="95" rx="47.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
-              <circle cx="85" cy="82.5" r="12" fill="none" stroke="#64748b" stroke-width="2.5"/>
-              <line x1="85" y1="74" x2="85" y2="91" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
-            </g>
-
-            <!-- Middle LED Status Icon -->
-            <circle cx="85" cy="150" r="3.5" fill="#64748b"/>
-
-            <!-- Bottom Oval Concave Button -->
-            <g class="interactive-element ${currentTargetId==='bottom_button'?'active':''}" onclick="selectTarget('bottom_button', 'Bottom Concave Button (OFF / Dim Down)')">
-              <rect x="35" y="170" width="100" height="95" rx="47.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
-              <circle cx="85" cy="217.5" r="10" fill="none" stroke="#64748b" stroke-width="2.5"/>
-            </g>
-          </svg>
-        `
-      },
-      'styrbar': {
-        name: 'IKEA STYRBAR Remote',
-        model: 'E2001',
-        protocol: 'Zigbee2MQTT',
-        renderSvg: () => `
-          <svg class="remote-casing" width="170" height="280" viewBox="0 0 170 280" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="150" height="260" rx="20" fill="#e2e8f0" stroke="#94a3b8" stroke-width="4"/>
-            <!-- Top -->
-            <path class="interactive-element ${currentTargetId==='top'?'active':''}" onclick="selectTarget('top', 'Top Button (ON)')" d="M 20 20 L 150 20 L 150 100 L 20 100 Z" fill="#cbd5e1"/>
-            <text x="85" y="65" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▲ ON</text>
-            <!-- Left -->
-            <path class="interactive-element ${currentTargetId==='left'?'active':''}" onclick="selectTarget('left', 'Left Arrow')" d="M 20 105 L 80 105 L 80 175 L 20 175 Z" fill="#cbd5e1"/>
-            <text x="50" y="145" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">◄</text>
-            <!-- Right -->
-            <path class="interactive-element ${currentTargetId==='right'?'active':''}" onclick="selectTarget('right', 'Right Arrow')" d="M 90 105 L 150 105 L 150 175 L 90 175 Z" fill="#cbd5e1"/>
-            <text x="120" y="145" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">►</text>
-            <!-- Bottom -->
-            <path class="interactive-element ${currentTargetId==='bottom'?'active':''}" onclick="selectTarget('bottom', 'Bottom Button (OFF)')" d="M 20 180 L 150 180 L 150 260 L 20 260 Z" fill="#cbd5e1"/>
-            <text x="85" y="225" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▼ OFF</text>
-          </svg>
-        `
-      },
-      'symfonisk': {
-        name: 'IKEA SYMFONISK Dial',
-        model: 'E1744',
-        protocol: 'ZHA',
-        renderSvg: () => `
-          <svg class="remote-casing" width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="90" cy="90" r="80" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="4"/>
-            <g class="interactive-element ${currentTargetId==='dial_rotate'?'active':''}" onclick="selectTarget('dial_rotate', 'Dial Rotary Knob')">
-              <circle cx="90" cy="90" r="60" fill="#cbd5e1" stroke="#64748b" stroke-width="3"/>
-              <circle cx="90" cy="50" r="6" fill="#334155"/>
-              <text x="90" y="95" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">ROTATE / PRESS</text>
-            </g>
-          </svg>
-        `
-      },
-      'hue_dimmer': {
-        name: 'Philips Hue Dimmer V2',
-        model: 'RWL022',
-        protocol: 'ZHA',
-        renderSvg: () => `
-          <svg class="remote-casing" width="140" height="280" viewBox="0 0 140 280" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="120" height="260" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
-            <rect class="interactive-element ${currentTargetId==='hue_on'?'active':''}" onclick="selectTarget('hue_on', 'Hue ON / Hue Button')" x="25" y="30" width="90" height="50" rx="8" fill="#e2e8f0"/>
-            <text x="70" y="60" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">ON / I</text>
-            <rect class="interactive-element ${currentTargetId==='hue_up'?'active':''}" onclick="selectTarget('hue_up', 'Dim Up')" x="25" y="90" width="90" height="40" rx="8" fill="#e2e8f0"/>
-            <text x="70" y="115" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">▲</text>
-            <rect class="interactive-element ${currentTargetId==='hue_down'?'active':''}" onclick="selectTarget('hue_down', 'Dim Down')" x="25" y="140" width="90" height="40" rx="8" fill="#e2e8f0"/>
-            <text x="70" y="165" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">▼</text>
-            <rect class="interactive-element ${currentTargetId==='hue_off'?'active':''}" onclick="selectTarget('hue_off', 'Hue OFF / O')" x="25" y="195" width="90" height="50" rx="8" fill="#e2e8f0"/>
-            <text x="70" y="225" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">OFF / O</text>
-          </svg>
-        `
-      }
-    };
-
-    // Render selected device SVG & populate fields
     function selectDevice(devId) {
       currentDeviceId = devId;
-      document.querySelectorAll('.device-item').forEach(el => el.classList.remove('active'));
-      if(event && event.currentTarget) event.currentTarget.classList.add('active');
-
-      const dev = devices[devId];
-      if (devId === 'bilresa_wheel') {
-        currentTargetId = 'bottom_dots';
-        currentTargetLabel = 'Bottom Shell Button (Three Dots - Scene Toggle)';
-      } else if (devId === 'bilresa_2btn') {
-        currentTargetId = 'top_button';
-        currentTargetLabel = 'Top Concave Button (ON / Dim Up)';
-      } else {
-        currentTargetId = 'top';
-        currentTargetLabel = 'Primary Action';
-      }
-
+      renderDeviceList();
       renderCanvas();
-      loadFormState();
-      logEvent('Selected device: ' + dev.name + ' (' + dev.model + ')');
+      logEvent(`Loaded switch blueprint: ${devId}`);
     }
 
     function renderCanvas() {
       const container = document.getElementById('deviceSvgContainer');
-      container.innerHTML = devices[currentDeviceId].renderSvg();
-      document.getElementById('selectedTargetTitle').innerHTML = `
-        <i class="mdi mdi-target-account" style="color: var(--accent);"></i> Target: ${currentTargetLabel}
-      `;
+      const renderer = svgRenderers[currentDeviceId] || svgRenderers['bilresa_wheel'];
+      container.innerHTML = renderer();
     }
 
-    function selectTarget(targetId, targetLabel) {
-      currentTargetId = targetId;
-      currentTargetLabel = targetLabel;
-      renderCanvas();
-      loadFormState();
-      logEvent('Selected target element: ' + targetLabel);
-    }
-
-    // Dynamic Action Categories & Services
+    // Action Services per Domain Category
     const serviceOptions = {
       light: [
         { val: 'light.toggle', label: 'Toggle Light' },
@@ -1002,7 +483,7 @@
         { val: 'light.brightness_down', label: 'Brightness -10%' }
       ],
       scene: [
-        { val: 'scene.turn_on', label: 'Activate Scene / Toggle Scene' }
+        { val: 'scene.turn_on', label: 'Activate Scene / Toggle Preset' }
       ],
       media_player: [
         { val: 'media_player.media_play_pause', label: 'Play / Pause' },
@@ -1016,8 +497,7 @@
       ],
       switch: [
         { val: 'switch.toggle', label: 'Toggle Switch' },
-        { val: 'switch.turn_on', label: 'Turn On Switch' },
-        { val: 'switch.turn_off', label: 'Turn Off Switch' }
+        { val: 'switch.turn_on', label: 'Turn On Switch' }
       ]
     };
 
@@ -1031,130 +511,184 @@
         el.textContent = opt.label;
         svcSelect.appendChild(el);
       });
-
-      // Default entity values per category
-      const entityInput = document.getElementById('targetEntity');
-      if (cat === 'light') entityInput.value = 'light.living_room_lights';
-      else if (cat === 'scene') entityInput.value = 'scene.movie_night';
-      else if (cat === 'media_player') entityInput.value = 'media_player.sonos_living_room';
-      else if (cat === 'automation') entityInput.value = 'automation.night_mode';
-      else if (cat === 'switch') entityInput.value = 'switch.coffee_maker';
     }
 
-    function updateTriggerMode() {
-      const trig = document.getElementById('clickTrigger').value;
-      document.getElementById('selectedClickType').textContent = trig.replace('_', ' ').toUpperCase();
-    }
+    // Open Action Configuration Modal
+    function openActionModal(targetId, targetLabel) {
+      activeModalTarget = { id: targetId, label: targetLabel };
+      document.getElementById('actionModalTitle').innerText = `Configure: ${targetLabel}`;
 
-    function loadFormState() {
-      const devMap = mappings[currentDeviceId] || {};
-      const saved = devMap[currentTargetId];
+      const saved = (savedMappings[currentDeviceId] || {})[targetId];
       if (saved) {
         document.getElementById('clickTrigger').value = saved.trigger || 'press';
-        document.getElementById('targetEntity').value = saved.entity || 'light.living_room_lights';
-        updateTriggerMode();
+        document.getElementById('actionCategory').value = saved.category || 'light';
+        updateActionServices();
+        document.getElementById('actionService').value = saved.service || 'light.toggle';
+        document.getElementById('targetEntityInput').value = saved.entity || '';
+      } else {
+        document.getElementById('clickTrigger').value = 'press';
+        document.getElementById('actionCategory').value = 'light';
+        updateActionServices();
+        document.getElementById('targetEntityInput').value = '';
       }
+
+      document.getElementById('actionModal').classList.add('open');
     }
 
-    function saveCurrentMapping() {
-      if (!mappings[currentDeviceId]) mappings[currentDeviceId] = {};
+    function closeActionModal() {
+      document.getElementById('actionModal').classList.remove('open');
+    }
+
+    function saveActionModal() {
+      if (!savedMappings[currentDeviceId]) savedMappings[currentDeviceId] = {};
       const trigger = document.getElementById('clickTrigger').value;
+      const category = document.getElementById('actionCategory').value;
       const service = document.getElementById('actionService').value;
-      const entity = document.getElementById('targetEntity').value;
+      const entity = document.getElementById('targetEntityInput').value;
 
-      mappings[currentDeviceId][currentTargetId] = { trigger, service, entity };
-      logEvent(`Saved mapping [${currentDeviceId}] -> ${currentTargetLabel} (${trigger}) = ${service} [${entity}]`);
-      alert(`Action Saved!\nDevice: ${devices[currentDeviceId].name}\nTarget: ${currentTargetLabel}\nAction: ${service} -> ${entity}`);
+      savedMappings[currentDeviceId][activeModalTarget.id] = { trigger, category, service, entity, label: activeModalTarget.label };
+      closeActionModal();
+      renderCanvas();
+      renderMappingsTable();
+      saveAllMappingsToHA();
+      logEvent(`Saved action for ${activeModalTarget.label}: ${service} -> ${entity}`);
     }
 
-    function removeCurrentMapping() {
-      if (mappings[currentDeviceId] && mappings[currentDeviceId][currentTargetId]) {
-        delete mappings[currentDeviceId][currentTargetId];
-        logEvent(`Removed mapping for ${currentTargetLabel}`);
-        alert('Mapping removed.');
+    function deleteCurrentActionModal() {
+      if (savedMappings[currentDeviceId] && savedMappings[currentDeviceId][activeModalTarget.id]) {
+        delete savedMappings[currentDeviceId][activeModalTarget.id];
+        closeActionModal();
+        renderCanvas();
+        renderMappingsTable();
+        saveAllMappingsToHA();
+        logEvent(`Deleted action for ${activeModalTarget.label}`);
       }
     }
 
-    function simulateEvent() {
-      const service = document.getElementById('actionService').value;
-      const entity = document.getElementById('targetEntity').value;
-      logEvent(`⚡ Simulated Event Fired: ${currentTargetLabel} -> ${service} (${entity})`);
+    // Navigation & Table rendering
+    function switchTab(tab) {
+      document.getElementById('tabEditor').classList.toggle('active', tab === 'editor');
+      document.getElementById('tabMappings').classList.toggle('active', tab === 'mappings');
+      document.getElementById('viewEditor').style.display = tab === 'editor' ? 'flex' : 'none';
+      document.getElementById('viewMappings').style.display = tab === 'mappings' ? 'flex' : 'none';
+      if (tab === 'mappings') renderMappingsTable();
+    }
+
+    function renderMappingsTable() {
+      const tbody = document.getElementById('mappingsTableBody');
+      tbody.innerHTML = '';
+      let total = 0;
+
+      for (const devId in savedMappings) {
+        const dev = deviceCatalog.find(d => d.id === devId) || { name: devId };
+        for (const targetId in savedMappings[devId]) {
+          total++;
+          const map = savedMappings[devId][targetId];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${dev.name}</strong></td>
+            <td>${map.label || targetId}</td>
+            <td><code>${map.trigger}</code></td>
+            <td><span class="action-badge">${map.service}</span></td>
+            <td><code>${map.entity || 'N/A'}</code></td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="selectDevice('${devId}'); openActionModal('${targetId}', '${map.label}')">Edit</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+      document.getElementById('mappingsCount').innerText = total;
+    }
+
+    // API Integration with Home Assistant Backend
+    async function loadHAData() {
+      try {
+        const resEntities = await fetch('/api/visual_switch_manager/entities');
+        if (resEntities.ok) {
+          haEntities = await resEntities.json();
+          populateEntitiesDatalist();
+          logEvent(`Discovered ${haEntities.length} entities from Home Assistant`);
+        }
+
+        const resMappings = await fetch('/api/visual_switch_manager/mappings');
+        if (resMappings.ok) {
+          savedMappings = await resMappings.json();
+          renderCanvas();
+          renderMappingsTable();
+          logEvent('Loaded saved mappings from Home Assistant storage');
+        }
+      } catch (err) {
+        console.warn('Running in standalone mode or HA API loading:', err);
+      }
+    }
+
+    function populateEntitiesDatalist() {
+      const datalist = document.getElementById('haEntitiesDatalist');
+      datalist.innerHTML = '';
+      haEntities.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.entity_id;
+        opt.label = `${e.name} (${e.entity_id})`;
+        datalist.appendChild(opt);
+      });
+    }
+
+    async function saveAllMappingsToHA() {
+      try {
+        await fetch('/api/visual_switch_manager/mappings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(savedMappings)
+        });
+        logEvent('Synced mappings to Home Assistant storage');
+      } catch (err) {
+        console.warn('Failed to sync to HA backend:', err);
+      }
     }
 
     function logEvent(msg) {
       const term = document.getElementById('eventTerminal');
       const time = new Date().toLocaleTimeString();
-      const line = document.createElement('div');
-      line.className = 'terminal-line';
-      line.innerHTML = `<span class="terminal-time">[${time}]</span> <span>${msg}</span>`;
-      term.appendChild(line);
+      term.innerHTML += `<div><span style="color:var(--text-muted);">[${time}]</span> ${msg}</div>`;
       term.scrollTop = term.scrollHeight;
     }
 
-    function clearLogs() {
-      document.getElementById('eventTerminal').innerHTML = '';
-    }
-
-    // Search filter
+    function clearLogs() { document.getElementById('eventTerminal').innerHTML = ''; }
     function filterDevices() {
       const q = document.getElementById('deviceSearch').value.toLowerCase();
       document.querySelectorAll('.device-item').forEach(el => {
-        const txt = el.innerText.toLowerCase();
-        el.style.display = txt.includes(q) ? 'flex' : 'none';
+        el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none';
       });
     }
 
-    // Modal Export
     function openBlueprintModal() {
-      const modal = document.getElementById('yamlModal');
-      modal.classList.add('open');
-
-      const dev = devices[currentDeviceId];
-      const yaml = `blueprint:
-  name: "Visual Switch Manager - ${dev.name}"
-  description: "Automated Blueprint generated by Visual Switch Manager"
+      document.getElementById('yamlModal').classList.add('open');
+      document.getElementById('yamlCodePreview').textContent = `blueprint:
+  name: "Visual Switch Manager - ${currentDeviceId}"
   domain: automation
   input:
     switch_device:
-      name: Select ${dev.name}
+      name: Select Device
       selector:
-        device:
-          integration: zha
-
+        device: {}
 mode: single
 trigger:
   - platform: event
     event_type: zha_event
-    event_data:
-      device_id: !input switch_device
-
-action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.event.data.command == 'toggle' }}"
-        sequence:
-          - service: ${mappings[currentDeviceId]?.['bottom_dots']?.service || 'scene.turn_on'}
-            target:
-              entity_id: ${mappings[currentDeviceId]?.['bottom_dots']?.entity || 'scene.movie_night'}
 `;
-      document.getElementById('yamlCodePreview').textContent = yaml;
     }
-
-    function closeBlueprintModal() {
-      document.getElementById('yamlModal').classList.remove('open');
-    }
-
+    function closeBlueprintModal() { document.getElementById('yamlModal').classList.remove('open'); }
     function copyYamlToClipboard() {
-      const code = document.getElementById('yamlCodePreview').textContent;
-      navigator.clipboard.writeText(code);
+      navigator.clipboard.writeText(document.getElementById('yamlCodePreview').textContent);
       alert('Blueprint YAML copied to clipboard!');
     }
 
-    // Init
     window.onload = () => {
       updateActionServices();
-      selectDevice('bilresa_wheel');
+      renderDeviceList();
+      renderCanvas();
+      loadHAData();
     };
   </script>
 </body>

@@ -2,15 +2,59 @@
 import logging
 from pathlib import Path
 from homeassistant.components import frontend
-from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "visual_switch_manager"
 PANEL_URL_PATH = "visual_switch_manager"
 STATIC_URL_PATH = "/visual_switch_manager_static"
+STORAGE_KEY = "visual_switch_manager_mappings"
+STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
+
+class VisualSwitchManagerMappingsView(HomeAssistantView):
+    url = "/api/visual_switch_manager/mappings"
+    name = "api:visual_switch_manager:mappings"
+    requires_auth = True
+
+    def __init__(self, store: Store) -> None:
+        self.store = store
+
+    async def get(self, request):
+        """Get all saved mappings."""
+        data = await self.store.async_load() or {}
+        return self.json(data)
+
+    async def post(self, request):
+        """Save mappings."""
+        data = await request.json()
+        await self.store.async_save(data)
+        return self.json({"status": "ok", "saved": data})
+
+class VisualSwitchManagerEntitiesView(HomeAssistantView):
+    url = "/api/visual_switch_manager/entities"
+    name = "api:visual_switch_manager:entities"
+    requires_auth = True
+
+    async def get(self, request):
+        """Get all controllable entities from Home Assistant."""
+        hass: HomeAssistant = request.app["hass"]
+        states = hass.states.async_all()
+        allowed_domains = {"light", "scene", "media_player", "automation", "script", "switch", "fan", "climate", "cover"}
+        entities = [
+            {
+                "entity_id": state.entity_id,
+                "name": state.attributes.get("friendly_name", state.entity_id),
+                "domain": state.domain,
+                "state": state.state
+            }
+            for state in states
+            if state.domain in allowed_domains
+        ]
+        return self.json(entities)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Visual Switch Manager component via YAML (if any, but we prefer UI)."""
@@ -21,6 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Visual Switch Manager from a config entry."""
     _LOGGER.info("Setting up Visual Switch Manager integration")
     hass.data.setdefault(DOMAIN, {})
+
+    # Register persistent storage and HTTP API views
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    hass.data[DOMAIN]["store"] = store
+    hass.http.register_view(VisualSwitchManagerMappingsView(store))
+    hass.http.register_view(VisualSwitchManagerEntitiesView())
 
     # Register static path for frontend assets
     frontend_dir = Path(__file__).parent / "frontend"
@@ -59,12 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_zha_event(event):
         """Handle events from ZHA (Zigbee Home Automation)."""
         _LOGGER.debug(f"Received ZHA event: {event.data}")
-        # Routing logic goes here
         
     async def handle_z2m_event(event):
         """Handle events from Zigbee2MQTT via MQTT."""
         _LOGGER.debug(f"Received Z2M event: {event.data}")
-        # Routing logic goes here
 
     # Register listeners and keep the unsubscribe callables so we can clean up.
     unsub_zha = hass.bus.async_listen("zha_event", handle_zha_event)
