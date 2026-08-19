@@ -352,105 +352,339 @@
     let activeModalTarget = { id: '', label: '' };
     let savedMappings = {};
     let haEntities = [];
+    let haPhysicalDevices = [];
 
-    // Catalog of All Supported Devices (21 Models across Z2M, ZHA, Matter, BTHome)
+    // Fetch helper that always sends HA session cookie
+    const api = {
+      get: (url) => fetch(url, { credentials: 'same-origin' }),
+      post: (url, body) => fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+    };
+
+    // Catalog of All Supported Devices
     const deviceCatalog = [
-      { id: 'bilresa_wheel', name: 'IKEA BILRESA Scrollwheel', model: 'E2201', protocol: 'Matter/Z2M', icon: 'mdi-circle-double', tagClass: 'tag-matter' },
-      { id: 'bilresa_2btn', name: 'IKEA BILRESA 2-Button', model: 'E2202', protocol: 'Matter/Z2M', icon: 'mdi-gesture-tap-button', tagClass: 'tag-matter' },
-      { id: 'styrbar', name: 'IKEA STYRBAR Remote', model: 'E2001/E2002', protocol: 'Z2M/ZHA', icon: 'mdi-view-grid-outline', tagClass: 'tag-z2m' },
-      { id: 'symfonisk', name: 'IKEA SYMFONISK Dial V1', model: 'E1744', protocol: 'ZHA', icon: 'mdi-knob', tagClass: 'tag-zha' },
-      { id: 'symfonisk_v2', name: 'IKEA SYMFONISK Sound Remote V2', model: 'E2123', protocol: 'Z2M/ZHA', icon: 'mdi-volume-medium', tagClass: 'tag-z2m' },
-      { id: 'tradfri_onoff', name: 'IKEA TRÅDFRI On/Off Dimmer', model: 'E1743', protocol: 'Z2M/ZHA', icon: 'mdi-toggle-switch-outline', tagClass: 'tag-z2m' },
-      { id: 'tradfri_5btn', name: 'IKEA TRÅDFRI 5-Button Remote', model: 'E1524', protocol: 'Z2M/ZHA', icon: 'mdi-rhombus-split', tagClass: 'tag-z2m' },
-      { id: 'somrig', name: 'IKEA SOMRIG 2-Button Shortcut', model: 'E2213', protocol: 'Matter/Z2M', icon: 'mdi-bookmark-outline', tagClass: 'tag-matter' },
-      { id: 'rodret', name: 'IKEA RODRET Dimmer Switch', model: 'E2201', protocol: 'Matter/Z2M', icon: 'mdi-plus-minus', tagClass: 'tag-matter' },
-
-      { id: 'hue_dimmer_v2', name: 'Philips Hue Dimmer V2', model: 'RWL022', protocol: 'ZHA/Z2M', icon: 'mdi-lightbulb-remote-outline', tagClass: 'tag-zha' },
-      { id: 'hue_dimmer_v1', name: 'Philips Hue Dimmer V1', model: 'RWL020', protocol: 'ZHA', icon: 'mdi-remote-desktop', tagClass: 'tag-zha' },
-      { id: 'hue_tap_dial', name: 'Philips Hue Tap Dial Switch', model: '8719514440937', protocol: 'Z2M/ZHA', icon: 'mdi-dialpad', tagClass: 'tag-z2m' },
-      { id: 'hue_smart_button', name: 'Philips Hue Smart Button', model: '9290022408', protocol: 'ZHA', icon: 'mdi-radiobox-marked', tagClass: 'tag-zha' },
-
-      { id: 'aqara_mini', name: 'Aqara Wireless Mini Switch', model: 'WXKG11LM', protocol: 'Z2M/ZHA', icon: 'mdi-checkbox-blank-circle-outline', tagClass: 'tag-z2m' },
-      { id: 'aqara_opple_6', name: 'Aqara Opple 6-Button Switch', model: 'WXCJKG13LM', protocol: 'Z2M/ZHA', icon: 'mdi-grid', tagClass: 'tag-z2m' },
-      { id: 'aqara_cube', name: 'Aqara Cube T1 Pro', model: 'CT-R01', protocol: 'Z2M/ZHA', icon: 'mdi-cube-outline', tagClass: 'tag-z2m' },
-
-      { id: 'shelly_blu', name: 'Shelly BLU Button1', model: 'BTHome', protocol: 'Matter/BTHome', icon: 'mdi-bluetooth', tagClass: 'tag-bthome' },
-      { id: 'shelly_wall', name: 'Shelly Wall Switch', model: 'Matter/WiFi', protocol: 'Matter', icon: 'mdi-wall-sconce-flat', tagClass: 'tag-matter' },
-
-      { id: 'sonoff_snzb', name: 'Sonoff SNZB-01 Wireless Switch', model: 'SNZB-01', protocol: 'Z2M/ZHA', icon: 'mdi-power-plug-outline', tagClass: 'tag-z2m' },
-      { id: 'tuya_4gang', name: 'Tuya 4-Gang Scene Switch', model: 'TS0044', protocol: 'Z2M/ZHA', icon: 'mdi-view-dashboard-variant-outline', tagClass: 'tag-z2m' },
-      { id: 'matter_generic', name: 'Matter Universal Button Remote', model: 'Generic Matter', protocol: 'Matter', icon: 'mdi-gate', tagClass: 'tag-matter' }
+      { id: 'bilresa_wheel',  name: 'IKEA BILRESA Scrollwheel',       model: 'E2201',         protocol: 'Matter/Z2M', icon: 'mdi-circle-double',                   tagClass: 'tag-matter' },
+      { id: 'bilresa_2btn',   name: 'IKEA BILRESA 2-Button',          model: 'E2202',         protocol: 'Matter/Z2M', icon: 'mdi-gesture-tap-button',              tagClass: 'tag-matter' },
+      { id: 'styrbar',        name: 'IKEA STYRBAR Remote',            model: 'E2001/E2002',   protocol: 'Z2M/ZHA',   icon: 'mdi-view-grid-outline',               tagClass: 'tag-z2m' },
+      { id: 'symfonisk',      name: 'IKEA SYMFONISK Dial V1',         model: 'E1744',         protocol: 'ZHA',        icon: 'mdi-knob',                            tagClass: 'tag-zha' },
+      { id: 'symfonisk_v2',   name: 'IKEA SYMFONISK Sound Remote V2', model: 'E2123',         protocol: 'Z2M/ZHA',   icon: 'mdi-volume-medium',                   tagClass: 'tag-z2m' },
+      { id: 'tradfri_onoff',  name: 'IKEA TRÅDFRI On/Off Dimmer',    model: 'E1743',         protocol: 'Z2M/ZHA',   icon: 'mdi-toggle-switch-outline',           tagClass: 'tag-z2m' },
+      { id: 'tradfri_5btn',   name: 'IKEA TRÅDFRI 5-Button Remote',  model: 'E1524/E1810',   protocol: 'Z2M/ZHA',   icon: 'mdi-rhombus-split',                   tagClass: 'tag-z2m' },
+      { id: 'somrig',         name: 'IKEA SOMRIG Shortcut Button',    model: 'E2213',         protocol: 'Matter/Z2M', icon: 'mdi-bookmark-outline',                tagClass: 'tag-matter' },
+      { id: 'rodret',         name: 'IKEA RODRET Dimmer',             model: 'E2201',         protocol: 'Matter/Z2M', icon: 'mdi-plus-minus',                      tagClass: 'tag-matter' },
+      { id: 'hue_dimmer_v2',  name: 'Philips Hue Dimmer Switch V2',  model: 'RWL022',        protocol: 'ZHA/Z2M',   icon: 'mdi-lightbulb-remote-outline',        tagClass: 'tag-zha' },
+      { id: 'hue_dimmer_v1',  name: 'Philips Hue Dimmer Switch V1',  model: 'RWL020/021',    protocol: 'ZHA',        icon: 'mdi-remote-desktop',                  tagClass: 'tag-zha' },
+      { id: 'hue_tap_dial',   name: 'Philips Hue Tap Dial Switch',   model: '8719514440937', protocol: 'Z2M/ZHA',   icon: 'mdi-dialpad',                         tagClass: 'tag-z2m' },
+      { id: 'hue_smart_btn',  name: 'Philips Hue Smart Button',      model: '9290022408',    protocol: 'ZHA',        icon: 'mdi-radiobox-marked',                 tagClass: 'tag-zha' },
+      { id: 'aqara_mini',     name: 'Aqara Wireless Mini Switch',    model: 'WXKG11LM',      protocol: 'Z2M/ZHA',   icon: 'mdi-checkbox-blank-circle-outline',   tagClass: 'tag-z2m' },
+      { id: 'aqara_opple6',   name: 'Aqara Opple 6-Button Switch',   model: 'WXCJKG13LM',    protocol: 'Z2M/ZHA',   icon: 'mdi-grid',                            tagClass: 'tag-z2m' },
+      { id: 'aqara_cube',     name: 'Aqara Cube T1 Pro',             model: 'CTP-R01',       protocol: 'Z2M/ZHA',   icon: 'mdi-cube-outline',                    tagClass: 'tag-z2m' },
+      { id: 'shelly_blu',     name: 'Shelly BLU Button1',            model: 'SBBT-002C',     protocol: 'BTHome',     icon: 'mdi-bluetooth',                       tagClass: 'tag-bthome' },
+      { id: 'shelly_wall',    name: 'Shelly Wall Switch (Matter)',    model: 'SNSW-001X16EU', protocol: 'Matter',     icon: 'mdi-wall-sconce-flat',                tagClass: 'tag-matter' },
+      { id: 'sonoff_snzb',    name: 'Sonoff SNZB-01 Wireless Btn',  model: 'SNZB-01',       protocol: 'Z2M/ZHA',   icon: 'mdi-power-plug-outline',              tagClass: 'tag-z2m' },
+      { id: 'tuya_4gang',     name: 'Tuya 4-Gang Scene Switch',      model: 'TS0044',         protocol: 'Z2M/ZHA',   icon: 'mdi-view-dashboard-variant-outline',  tagClass: 'tag-z2m' },
+      { id: 'matter_generic', name: 'Matter Generic Remote',          model: 'Generic',        protocol: 'Matter',     icon: 'mdi-gate',                            tagClass: 'tag-matter' },
     ];
 
-    // SVG Render Functions per Device
+    // Helper: check if a target on current device has a saved action
+    function cfg(t) { return (savedMappings[currentDeviceId] || {})[t] ? 'configured' : ''; }
+    function btn(id, label) { return `onclick="openActionModal('${id}','${label}')" class="interactive-element ${cfg(id)}"`; }
+
+    // ----- SVG Renderers (one per device) -----
     const svgRenderers = {
-      'bilresa_wheel': () => `
-        <svg class="remote-casing" width="190" height="320" viewBox="0 0 190 320" xmlns="http://www.w3.org/2000/svg">
+
+      bilresa_wheel: () => `
+        <svg width="190" height="320" viewBox="0 0 190 320" xmlns="http://www.w3.org/2000/svg">
           <rect x="10" y="10" width="170" height="300" rx="85" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
           <rect x="14" y="14" width="162" height="292" rx="81" fill="#f1f5f9"/>
-
-          <!-- Scroll Wheel Top -->
-          <g class="interactive-element ${isConfigured('wheel_center')?'configured':''}" onclick="openActionModal('wheel_center', 'Scroll Wheel Center Press')">
+          <g ${btn('wheel_center','Scroll Wheel Center Press')}>
             <circle cx="95" cy="100" r="66" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
             <circle cx="95" cy="100" r="40" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
-            <text x="95" y="104" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">CLICK / PRESS</text>
+            <text x="95" y="104" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">PRESS</text>
           </g>
-
-          <path class="interactive-element ${isConfigured('wheel_cw')?'configured':''}" onclick="openActionModal('wheel_cw', 'Rotate Wheel Clockwise (+)')"
-            d="M 132,54 A 58 58 0 0 1 153,105" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
-
-          <path class="interactive-element ${isConfigured('wheel_ccw')?'configured':''}" onclick="openActionModal('wheel_ccw', 'Rotate Wheel Counter-Clockwise (-)')"
-            d="M 58,54 A 58 58 0 0 0 37,105" fill="none" stroke="#818cf8" stroke-width="6" stroke-linecap="round"/>
-
+          <path ${btn('wheel_cw','Rotate Clockwise (+)')} d="M 132,54 A 58 58 0 0 1 153,105" fill="none" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <path ${btn('wheel_ccw','Rotate Counter-Clockwise (-)')} d="M 58,54 A 58 58 0 0 0 37,105" fill="none" stroke="#818cf8" stroke-width="7" stroke-linecap="round"/>
           <circle cx="95" cy="190" r="3" fill="#94a3b8"/>
-
-          <!-- Bottom Tactile Scene Button (Three Dots '...') -->
-          <g class="interactive-element ${isConfigured('bottom_dots')?'configured':''}" onclick="openActionModal('bottom_dots', 'Bottom Shell Button (Three Dots - Scene Toggle)')">
+          <g ${btn('bottom_dots','Bottom Scene Toggle Button (···)')}>
             <rect x="42" y="222" width="106" height="52" rx="26" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
             <circle cx="79" cy="248" r="3.5" fill="#475569"/>
             <circle cx="95" cy="248" r="3.5" fill="#475569"/>
             <circle cx="111" cy="248" r="3.5" fill="#475569"/>
-            <text x="95" y="266" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">SCENE TOGGLE</text>
           </g>
-        </svg>
-      `,
-      'bilresa_2btn': () => `
-        <svg class="remote-casing" width="180" height="310" viewBox="0 0 180 310" xmlns="http://www.w3.org/2000/svg">
+        </svg>`,
+
+      bilresa_2btn: () => `
+        <svg width="180" height="310" viewBox="0 0 180 310" xmlns="http://www.w3.org/2000/svg">
           <rect x="10" y="10" width="160" height="290" rx="80" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
           <rect x="14" y="14" width="152" height="282" rx="76" fill="#f1f5f9"/>
-
-          <g class="interactive-element ${isConfigured('top_button')?'configured':''}" onclick="openActionModal('top_button', 'Top Concave Button (ON / Dim Up)')">
+          <g ${btn('top_button','Top Button (ON / Dim Up)')}>
             <rect x="38" y="38" width="104" height="100" rx="50" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
             <circle cx="90" cy="88" r="13" fill="none" stroke="#64748b" stroke-width="2.5"/>
             <line x1="90" y1="79" x2="90" y2="97" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
           </g>
-
           <circle cx="90" cy="155" r="3.5" fill="#64748b"/>
-
-          <g class="interactive-element ${isConfigured('bottom_button')?'configured':''}" onclick="openActionModal('bottom_button', 'Bottom Concave Button (OFF / Dim Down)')">
+          <g ${btn('bottom_button','Bottom Button (OFF / Dim Down)')}>
             <rect x="38" y="174" width="104" height="100" rx="50" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
             <circle cx="90" cy="224" r="11" fill="none" stroke="#64748b" stroke-width="2.5"/>
           </g>
-        </svg>
-      `,
-      'styrbar': () => `
-        <svg class="remote-casing" width="180" height="300" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="10" width="160" height="280" rx="20" fill="#e2e8f0" stroke="#94a3b8" stroke-width="4"/>
-          <rect class="interactive-element ${isConfigured('top')?'configured':''}" onclick="openActionModal('top', 'Top Button (ON)')" x="20" y="20" width="140" height="80" rx="10" fill="#cbd5e1"/>
-          <text x="90" y="65" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▲ ON</text>
-          <rect class="interactive-element ${isConfigured('left')?'configured':''}" onclick="openActionModal('left', 'Left Arrow')" x="20" y="105" width="65" height="80" rx="10" fill="#cbd5e1"/>
-          <text x="52.5" y="150" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">◄</text>
-          <rect class="interactive-element ${isConfigured('right')?'configured':''}" onclick="openActionModal('right', 'Right Arrow')" x="95" y="105" width="65" height="80" rx="10" fill="#cbd5e1"/>
-          <text x="127.5" y="150" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">►</text>
-          <rect class="interactive-element ${isConfigured('bottom')?'configured':''}" onclick="openActionModal('bottom', 'Bottom Button (OFF)')" x="20" y="190" width="140" height="80" rx="10" fill="#cbd5e1"/>
-          <text x="90" y="235" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">▼ OFF</text>
-        </svg>
-      `
+        </svg>`,
+
+      styrbar: () => `
+        <svg width="180" height="300" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="164" height="284" rx="22" fill="#e8ecf0" stroke="#94a3b8" stroke-width="3"/>
+          <rect ${btn('on','Top Button (ON)')} x="18" y="18" width="144" height="72" rx="10" fill="#cbd5e1"/>
+          <text x="90" y="59" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">▲  ON</text>
+          <rect ${btn('left','Left Arrow Button')} x="18" y="98" width="66" height="72" rx="10" fill="#cbd5e1"/>
+          <text x="51" y="139" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">◀</text>
+          <rect ${btn('right','Right Arrow Button')} x="96" y="98" width="66" height="72" rx="10" fill="#cbd5e1"/>
+          <text x="129" y="139" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">▶</text>
+          <rect ${btn('off','Bottom Button (OFF)')} x="18" y="178" width="144" height="72" rx="10" fill="#cbd5e1"/>
+          <text x="90" y="220" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">▼  OFF</text>
+          <circle cx="90" cy="265" r="5" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        </svg>`,
+
+      symfonisk: () => `
+        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="110" cy="110" r="100" fill="#f1f5f9" stroke="#94a3b8" stroke-width="4"/>
+          <g ${btn('dial_press','Dial Center Click / Press')}>
+            <circle cx="110" cy="110" r="65" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="110" y="115" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">CLICK</text>
+          </g>
+          <path ${btn('dial_cw','Rotate Clockwise (+)')} d="M 155,45 A 80 80 0 0 1 190,120" fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+          <path ${btn('dial_ccw','Rotate Counter-Clockwise (-)')} d="M 65,45 A 80 80 0 0 0 30,120" fill="none" stroke="#818cf8" stroke-width="8" stroke-linecap="round"/>
+        </svg>`,
+
+      symfonisk_v2: () => `
+        <svg width="200" height="320" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="180" height="300" rx="30" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('dial_press','Center Dial Click')}>
+            <circle cx="100" cy="110" r="70" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="100" y="115" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">DIAL / CLICK</text>
+          </g>
+          <path ${btn('dial_cw','Rotate Clockwise')} d="M 148,45 A 72 72 0 0 1 178,120" fill="none" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <path ${btn('dial_ccw','Rotate Counter-Clockwise')} d="M 52,45 A 72 72 0 0 0 22,120" fill="none" stroke="#818cf8" stroke-width="7" stroke-linecap="round"/>
+          <rect ${btn('play_pause','Play / Pause Button')} x="35" y="205" width="130" height="44" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+          <text x="100" y="232" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">⏯  PLAY / PAUSE</text>
+          <rect ${btn('vol_up','Volume Up Button')} x="35" y="258" width="58" height="38" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+          <text x="64" y="282" font-size="16" fill="#334155" text-anchor="middle" pointer-events="none">+</text>
+          <rect ${btn('vol_down','Volume Down Button')} x="107" y="258" width="58" height="38" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+          <text x="136" y="282" font-size="16" fill="#334155" text-anchor="middle" pointer-events="none">−</text>
+        </svg>`,
+
+      tradfri_onoff: () => `
+        <svg width="160" height="290" viewBox="0 0 160 290" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="140" height="270" rx="70" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('on','Top Button (ON)')}>
+            <rect x="28" y="28" width="104" height="110" rx="52" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="80" y="90" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">ON / +</text>
+          </g>
+          <circle cx="80" cy="145" r="4" fill="#94a3b8"/>
+          <g ${btn('off','Bottom Button (OFF)')}>
+            <rect x="28" y="152" width="104" height="110" rx="52" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="80" y="214" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle">OFF / −</text>
+          </g>
+        </svg>`,
+
+      tradfri_5btn: () => `
+        <svg width="210" height="210" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="105" cy="105" r="96" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('on_off','Center On/Off Button')}>
+            <circle cx="105" cy="105" r="38" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="105" y="110" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">ON/OFF</text>
+          </g>
+          <g ${btn('up','Brightness Up')}>
+            <path d="M75,60 L105,25 L135,60 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+          <g ${btn('down','Brightness Down')}>
+            <path d="M75,150 L105,185 L135,150 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+          <g ${btn('left','Colour Temp Cooler')}>
+            <path d="M60,75 L25,105 L60,135 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+          <g ${btn('right','Colour Temp Warmer')}>
+            <path d="M150,75 L185,105 L150,135 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+        </svg>`,
+
+      somrig: () => `
+        <svg width="180" height="120" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="164" height="104" rx="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('btn1','Left Shortcut Button 1')}>
+            <rect x="18" y="18" width="68" height="84" rx="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="52" y="62" font-size="22" text-anchor="middle" fill="#334155">1</text>
+          </g>
+          <g ${btn('btn2','Right Shortcut Button 2')}>
+            <rect x="94" y="18" width="68" height="84" rx="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="128" y="62" font-size="22" text-anchor="middle" fill="#334155">2</text>
+          </g>
+        </svg>`,
+
+      rodret: () => `
+        <svg width="160" height="290" viewBox="0 0 160 290" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="140" height="270" rx="70" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('plus','Dimmer Plus (+) Button')}>
+            <rect x="28" y="28" width="104" height="110" rx="52" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="80" y="90" font-size="28" fill="#334155" text-anchor="middle">+</text>
+          </g>
+          <circle cx="80" cy="145" r="4" fill="#94a3b8"/>
+          <g ${btn('minus','Dimmer Minus (−) Button')}>
+            <rect x="28" y="152" width="104" height="110" rx="52" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="80" y="214" font-size="28" fill="#334155" text-anchor="middle">−</text>
+          </g>
+        </svg>`,
+
+      hue_dimmer_v2: () => `
+        <svg width="140" height="300" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="124" height="284" rx="20" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+          <rect ${btn('hue_on','Hue Power ON / Scene')} x="18" y="18" width="104" height="62" rx="10" fill="#e2e8f0"/>
+          <text x="70" y="54" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">Hue ON / I</text>
+          <rect ${btn('hue_up','Dim Up')} x="18" y="88" width="104" height="48" rx="10" fill="#e2e8f0"/>
+          <text x="70" y="118" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">▲</text>
+          <rect ${btn('hue_down','Dim Down')} x="18" y="144" width="104" height="48" rx="10" fill="#e2e8f0"/>
+          <text x="70" y="174" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">▼</text>
+          <rect ${btn('hue_off','Hue Power OFF / Scene')} x="18" y="200" width="104" height="62" rx="10" fill="#e2e8f0"/>
+          <text x="70" y="236" font-size="12" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">Hue OFF / O</text>
+          <circle cx="70" cy="278" r="8" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        </svg>`,
+
+      hue_dimmer_v1: () => `
+        <svg width="140" height="300" viewBox="0 0 140 300" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="124" height="284" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+          <rect ${btn('on','ON Button')} x="18" y="18" width="104" height="60" rx="8" fill="#e2e8f0"/>
+          <text x="70" y="53" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">ON</text>
+          <rect ${btn('up','Dim Up')} x="18" y="86" width="104" height="46" rx="8" fill="#e2e8f0"/>
+          <text x="70" y="114" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">▲</text>
+          <rect ${btn('down','Dim Down')} x="18" y="140" width="104" height="46" rx="8" fill="#e2e8f0"/>
+          <text x="70" y="168" font-size="18" fill="#334155" text-anchor="middle" pointer-events="none">▼</text>
+          <rect ${btn('off','OFF Button')} x="18" y="194" width="104" height="60" rx="8" fill="#e2e8f0"/>
+          <text x="70" y="230" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">OFF</text>
+          <rect ${btn('recall','Recall Scene (Hold ON)')} x="18" y="262" width="104" height="28" rx="8" fill="#cbd5e1"/>
+          <text x="70" y="281" font-size="10" fill="#334155" text-anchor="middle" pointer-events="none">RECALL SCENE</text>
+        </svg>`,
+
+      hue_tap_dial: () => `
+        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="110" cy="110" r="100" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+          <g ${btn('dial_cw','Rotate Dial Clockwise')}>
+            <path d="M 155,42 A 82 82 0 0 1 192,120" fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+          </g>
+          <g ${btn('dial_ccw','Rotate Dial Counter-Clockwise')}>
+            <path d="M 65,42 A 82 82 0 0 0 28,120" fill="none" stroke="#818cf8" stroke-width="8" stroke-linecap="round"/>
+          </g>
+          <g ${btn('btn1','Button 1 (top-left)')}>
+            <circle cx="55" cy="55" r="22" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="55" y="60" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">1</text>
+          </g>
+          <g ${btn('btn2','Button 2 (top-right)')}>
+            <circle cx="165" cy="55" r="22" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="165" y="60" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">2</text>
+          </g>
+          <g ${btn('btn3','Button 3 (bottom-left)')}>
+            <circle cx="55" cy="165" r="22" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="55" y="170" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">3</text>
+          </g>
+          <g ${btn('btn4','Button 4 (bottom-right)')}>
+            <circle cx="165" cy="165" r="22" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <text x="165" y="170" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">4</text>
+          </g>
+        </svg>`,
+
+      hue_smart_btn: () => `
+        <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="80" r="70" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+          <g ${btn('press','Single Press')}>
+            <circle cx="80" cy="80" r="45" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="80" y="85" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">PRESS</text>
+          </g>
+        </svg>`,
+
+      aqara_mini: () => `
+        <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="144" height="144" rx="28" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('press','Single Click')}>
+            <circle cx="80" cy="80" r="48" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="80" y="85" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">CLICK</text>
+          </g>
+        </svg>`,
+
+      aqara_opple6: () => `
+        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="204" height="204" rx="30" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          ${['btn1','btn2','btn3','btn4','btn5','btn6'].map((id,i) => {
+            const col = i % 3, row = Math.floor(i / 2);
+            const x = 22 + col * 64, y = 22 + row * 84;
+            return `<g ${btn(id,'Button ' + (i+1))}>
+              <rect x="${x}" y="${y}" width="54" height="54" rx="12" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+              <text x="${x+27}" y="${y+32}" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">${i+1}</text>
+            </g>`;
+          }).join('')}
+        </svg>`,
+
+      aqara_cube: () => `
+        <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="140" height="140" rx="24" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3" transform="rotate(15 90 90)"/>
+          <g ${btn('shake','Shake Cube')}>
+            <circle cx="90" cy="90" r="38" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+            <text x="90" y="88" font-size="10" font-weight="bold" fill="#334155" text-anchor="middle">SHAKE</text>
+            <text x="90" y="102" font-size="10" fill="#475569" text-anchor="middle">/ FLIP / ROTATE</text>
+          </g>
+        </svg>`,
+
+      shelly_blu: () => `
+        <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="144" height="144" rx="28" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('press','Single Press')}>
+            <rect x="24" y="24" width="112" height="112" rx="20" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+            <text x="80" y="85" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">PRESS</text>
+          </g>
+        </svg>`,
+
+      shelly_wall: () => `
+        <svg width="180" height="280" viewBox="0 0 180 280" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="164" height="264" rx="18" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <rect ${btn('top','Top Rocker')} x="20" y="20" width="140" height="110" rx="12" fill="#e2e8f0"/>
+          <text x="90" y="80" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">▲  ON</text>
+          <rect ${btn('bottom','Bottom Rocker')} x="20" y="150" width="140" height="110" rx="12" fill="#e2e8f0"/>
+          <text x="90" y="210" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle" pointer-events="none">▼  OFF</text>
+        </svg>`,
+
+      sonoff_snzb: () => `
+        <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="80" r="70" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          <g ${btn('press','Single Press')}>
+            <circle cx="80" cy="80" r="45" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="80" y="85" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">PRESS</text>
+          </g>
+        </svg>`,
+
+      tuya_4gang: () => `
+        <svg width="220" height="160" viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="204" height="144" rx="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+          ${['S1','S2','S3','S4'].map((lbl,i) => {
+            const x = 20 + i * 47;
+            return `<g ${btn('btn_'+lbl.toLowerCase(),'Button '+lbl)}>
+              <rect x="${x}" y="20" width="38" height="120" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+              <text x="${x+19}" y="86" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle">${lbl}</text>
+            </g>`;
+          }).join('')}
+        </svg>`,
+
+      matter_generic: () => `
+        <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="160" height="160" rx="24" fill="#f1f5f9" stroke="#facc15" stroke-width="3"/>
+          <g ${btn('press','Matter Button Press')}>
+            <circle cx="90" cy="90" r="55" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+            <text x="90" y="88" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">MATTER</text>
+            <text x="90" y="104" font-size="11" fill="#475569" text-anchor="middle">BUTTON</text>
+          </g>
+        </svg>`,
     };
 
-    function isConfigured(targetId) {
-      return savedMappings[currentDeviceId] && savedMappings[currentDeviceId][targetId];
-    }
+    function isConfigured(t) { return (savedMappings[currentDeviceId] || {})[t]; }
 
     // Populate Sidebar Device Catalog
     function renderDeviceList() {
@@ -462,12 +696,8 @@
         item.onclick = () => selectDevice(dev.id);
         item.innerHTML = `
           <div class="device-thumb"><i class="mdi ${dev.icon}"></i></div>
-          <div class="device-info">
-            <h4>${dev.name}</h4>
-            <p>${dev.model}</p>
-          </div>
-          <span class="protocol-tag ${dev.tagClass}">${dev.protocol}</span>
-        `;
+          <div class="device-info"><h4>${dev.name}</h4><p>${dev.model}</p></div>
+          <span class="protocol-tag ${dev.tagClass}">${dev.protocol}</span>`;
         container.appendChild(item);
       });
       document.getElementById('deviceCount').innerText = `${deviceCatalog.length} Models`;
@@ -477,40 +707,48 @@
       currentDeviceId = devId;
       renderDeviceList();
       renderCanvas();
-      logEvent(`Loaded switch blueprint: ${devId}`);
+      logEvent(`Blueprint loaded: ${devId}`);
     }
 
     function renderCanvas() {
       const container = document.getElementById('deviceSvgContainer');
-      const renderer = svgRenderers[currentDeviceId] || svgRenderers['bilresa_wheel'];
-      container.innerHTML = renderer();
+      const renderer = svgRenderers[currentDeviceId];
+      if (renderer) {
+        container.innerHTML = renderer();
+      } else {
+        container.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:2rem;">
+          <i class="mdi mdi-devices" style="font-size:3rem;display:block;margin-bottom:1rem;"></i>
+          Blueprint diagram coming soon for this device.</div>`;
+      }
     }
 
     // Action Services per Domain Category
     const serviceOptions = {
       light: [
-        { val: 'light.toggle', label: 'Toggle Light' },
-        { val: 'light.turn_on', label: 'Turn On (100%)' },
-        { val: 'light.turn_off', label: 'Turn Off' },
-        { val: 'light.brightness_up', label: 'Brightness +10%' },
-        { val: 'light.brightness_down', label: 'Brightness -10%' }
+        { val: 'light.toggle',        label: 'Toggle Light' },
+        { val: 'light.turn_on',       label: 'Turn On (100%)' },
+        { val: 'light.turn_off',      label: 'Turn Off' },
+        { val: 'light.brightness_step_up',   label: 'Brightness +10%' },
+        { val: 'light.brightness_step_down', label: 'Brightness -10%' }
       ],
       scene: [
-        { val: 'scene.turn_on', label: 'Activate Scene / Toggle Preset' }
+        { val: 'scene.turn_on', label: 'Activate Scene' }
       ],
       media_player: [
         { val: 'media_player.media_play_pause', label: 'Play / Pause' },
-        { val: 'media_player.volume_up', label: 'Volume Up' },
-        { val: 'media_player.volume_down', label: 'Volume Down' },
-        { val: 'media_player.media_next_track', label: 'Next Track' }
+        { val: 'media_player.volume_up',        label: 'Volume Up' },
+        { val: 'media_player.volume_down',      label: 'Volume Down' },
+        { val: 'media_player.media_next_track', label: 'Next Track' },
+        { val: 'media_player.media_previous_track', label: 'Previous Track' }
       ],
       automation: [
         { val: 'automation.trigger', label: 'Trigger Automation' },
-        { val: 'script.turn_on', label: 'Run Script' }
+        { val: 'script.turn_on',     label: 'Run Script' }
       ],
       switch: [
-        { val: 'switch.toggle', label: 'Toggle Switch' },
-        { val: 'switch.turn_on', label: 'Turn On Switch' }
+        { val: 'switch.toggle',   label: 'Toggle Switch' },
+        { val: 'switch.turn_on',  label: 'Turn On Switch' },
+        { val: 'switch.turn_off', label: 'Turn Off Switch' }
       ]
     };
 
@@ -530,7 +768,6 @@
     function openActionModal(targetId, targetLabel) {
       activeModalTarget = { id: targetId, label: targetLabel };
       document.getElementById('actionModalTitle').innerText = `Configure: ${targetLabel}`;
-
       const saved = (savedMappings[currentDeviceId] || {})[targetId];
       if (saved) {
         document.getElementById('clickTrigger').value = saved.trigger || 'press';
@@ -544,7 +781,6 @@
         updateActionServices();
         document.getElementById('targetEntityInput').value = '';
       }
-
       document.getElementById('actionModal').classList.add('open');
     }
 
@@ -555,47 +791,41 @@
     async function simulateEvent() {
       const service = document.getElementById('actionService').value;
       const entity = document.getElementById('targetEntityInput').value;
-
-      logEvent(`⚡ Executing Home Assistant Action: ${service} -> ${entity}...`);
+      logEvent(`⚡ Testing: ${service} → ${entity}`);
       try {
-        const res = await fetch('/api/visual_switch_manager/test_action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ service, entity })
-        });
+        const res = await api.post('/api/visual_switch_manager/test_action', { service, entity });
         if (res.ok) {
-          logEvent(`✅ SUCCESS: ${service} executed on ${entity}!`);
+          logEvent(`✅ Success: ${service} executed on ${entity}`);
         } else {
-          logEvent(`⚠️ Executed (HTTP ${res.status})`);
+          logEvent(`⚠️ HTTP ${res.status} — check HA logs`);
         }
       } catch (err) {
-        logEvent(`❌ Error: ${err}`);
+        logEvent(`❌ Network error: ${err}`);
       }
     }
 
     function saveActionModal() {
       if (!savedMappings[currentDeviceId]) savedMappings[currentDeviceId] = {};
-      const trigger = document.getElementById('clickTrigger').value;
+      const trigger  = document.getElementById('clickTrigger').value;
       const category = document.getElementById('actionCategory').value;
-      const service = document.getElementById('actionService').value;
-      const entity = document.getElementById('targetEntityInput').value;
-
+      const service  = document.getElementById('actionService').value;
+      const entity   = document.getElementById('targetEntityInput').value;
       savedMappings[currentDeviceId][activeModalTarget.id] = { trigger, category, service, entity, label: activeModalTarget.label };
       closeActionModal();
       renderCanvas();
       renderMappingsTable();
       saveAllMappingsToHA();
-      logEvent(`Saved action for ${activeModalTarget.label}: ${service} -> ${entity}`);
+      logEvent(`Saved: ${activeModalTarget.label} → ${service} [${entity}]`);
     }
 
     function deleteCurrentActionModal() {
-      if (savedMappings[currentDeviceId] && savedMappings[currentDeviceId][activeModalTarget.id]) {
+      if (savedMappings[currentDeviceId]?.[activeModalTarget.id]) {
         delete savedMappings[currentDeviceId][activeModalTarget.id];
         closeActionModal();
         renderCanvas();
         renderMappingsTable();
         saveAllMappingsToHA();
-        logEvent(`Deleted action for ${activeModalTarget.label}`);
+        logEvent(`Deleted mapping for ${activeModalTarget.label}`);
       }
     }
 
@@ -612,7 +842,6 @@
       const tbody = document.getElementById('mappingsTableBody');
       tbody.innerHTML = '';
       let total = 0;
-
       for (const devId in savedMappings) {
         const dev = deviceCatalog.find(d => d.id === devId) || { name: devId };
         for (const targetId in savedMappings[devId]) {
@@ -625,54 +854,53 @@
             <td><code>${map.trigger}</code></td>
             <td><span class="action-badge">${map.service}</span></td>
             <td><code>${map.entity || 'N/A'}</code></td>
-            <td>
-              <button class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="selectDevice('${devId}'); openActionModal('${targetId}', '${map.label}')">Edit</button>
-            </td>
-          `;
+            <td><button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;"
+              onclick="selectDevice('${devId}');switchTab('editor');openActionModal('${targetId}','${map.label||targetId}')">Edit</button></td>`;
           tbody.appendChild(tr);
         }
       }
       document.getElementById('mappingsCount').innerText = total;
     }
 
-    // API Integration with Home Assistant Backend
-    let haPhysicalDevices = [];
-
+    // ---- API integration ----
     async function loadHAData() {
       try {
-        const resDevices = await fetch('/api/visual_switch_manager/devices');
+        const resDevices = await api.get('/api/visual_switch_manager/devices');
         if (resDevices.ok) {
           haPhysicalDevices = await resDevices.json();
           populateHAPhysicalDevices();
-          logEvent(`Discovered ${haPhysicalDevices.length} physical devices in Home Assistant`);
+          logEvent(`Discovered ${haPhysicalDevices.length} physical HA devices`);
+        } else {
+          logEvent(`⚠️ Devices API: HTTP ${resDevices.status}`);
         }
 
-        const resEntities = await fetch('/api/visual_switch_manager/entities');
+        const resEntities = await api.get('/api/visual_switch_manager/entities');
         if (resEntities.ok) {
           haEntities = await resEntities.json();
           populateEntitiesDatalist();
-          logEvent(`Discovered ${haEntities.length} entities from Home Assistant`);
+          logEvent(`Discovered ${haEntities.length} controllable entities`);
         }
 
-        const resMappings = await fetch('/api/visual_switch_manager/mappings');
+        const resMappings = await api.get('/api/visual_switch_manager/mappings');
         if (resMappings.ok) {
           savedMappings = await resMappings.json();
           renderCanvas();
           renderMappingsTable();
-          logEvent('Loaded saved mappings from Home Assistant storage');
+          logEvent('Loaded saved mappings');
         }
       } catch (err) {
-        console.warn('Running in HA API loading:', err);
+        logEvent(`⚠️ API error: ${err}`);
+        console.warn(err);
       }
     }
 
     function populateHAPhysicalDevices() {
       const select = document.getElementById('haPhysicalDeviceSelect');
-      select.innerHTML = '<option value="">-- Discovered Physical Remotes in Home Assistant --</option>';
+      select.innerHTML = '<option value="">-- Select your physical remote from Home Assistant --</option>';
       haPhysicalDevices.forEach(d => {
         const opt = document.createElement('option');
         opt.value = d.id;
-        opt.textContent = `${d.name} (${d.manufacturer} ${d.model})`;
+        opt.textContent = `${d.name}  (${d.manufacturer} ${d.model})`;
         select.appendChild(opt);
       });
     }
@@ -681,7 +909,7 @@
       const selectedId = document.getElementById('haPhysicalDeviceSelect').value;
       if (selectedId) {
         const dev = haPhysicalDevices.find(d => d.id === selectedId);
-        logEvent(`Linked physical HA device [${dev ? dev.name : selectedId}] to active template`);
+        logEvent(`🔗 Linked: ${dev ? dev.name : selectedId} → ${currentDeviceId} blueprint`);
       }
     }
 
@@ -691,21 +919,17 @@
       haEntities.forEach(e => {
         const opt = document.createElement('option');
         opt.value = e.entity_id;
-        opt.label = `${e.name} (${e.entity_id}) - [${e.state}]`;
+        opt.label = `${e.name}  [${e.state}]`;
         datalist.appendChild(opt);
       });
     }
 
     async function saveAllMappingsToHA() {
       try {
-        await fetch('/api/visual_switch_manager/mappings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(savedMappings)
-        });
-        logEvent('Synced mappings to Home Assistant storage');
+        await api.post('/api/visual_switch_manager/mappings', savedMappings);
+        logEvent('💾 Mappings synced to HA storage');
       } catch (err) {
-        console.warn('Failed to sync to HA backend:', err);
+        console.warn('Failed to sync:', err);
       }
     }
 
@@ -715,7 +939,6 @@
       term.innerHTML += `<div><span style="color:var(--text-muted);">[${time}]</span> ${msg}</div>`;
       term.scrollTop = term.scrollHeight;
     }
-
     function clearLogs() { document.getElementById('eventTerminal').innerHTML = ''; }
     function filterDevices() {
       const q = document.getElementById('deviceSearch').value.toLowerCase();
@@ -731,19 +954,22 @@
   domain: automation
   input:
     switch_device:
-      name: Select Device
+      name: Physical Remote Device
       selector:
         device: {}
 mode: single
 trigger:
   - platform: event
     event_type: zha_event
+    event_data:
+      device_id: !input switch_device
+action: []
 `;
     }
     function closeBlueprintModal() { document.getElementById('yamlModal').classList.remove('open'); }
     function copyYamlToClipboard() {
       navigator.clipboard.writeText(document.getElementById('yamlCodePreview').textContent);
-      alert('Blueprint YAML copied to clipboard!');
+      alert('Blueprint YAML copied!');
     }
 
     window.onload = () => {
