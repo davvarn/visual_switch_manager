@@ -1041,10 +1041,13 @@
       let buttons = [];
       if (currentDeviceId === 'bilresa_wheel') {
         const ch = activeBilresaChannel || 1;
+        const btnCenter = ch === 1 ? 3 : (ch === 2 ? 6 : 9);
+        const btnCW = ch === 1 ? 1 : (ch === 2 ? 4 : 7);
+        const btnCCW = ch === 1 ? 2 : (ch === 2 ? 5 : 8);
         buttons = [
-          { id: `g${ch}_wheel_center`, name: `Group ${ch} Center Press`, desc: 'Click / Press scroll wheel', icon: 'mdi-circle-slice-8' },
-          { id: `g${ch}_wheel_cw`,     name: `Group ${ch} Rotate Clockwise`, desc: 'Turn wheel right (+10%)', icon: 'mdi-rotate-right' },
-          { id: `g${ch}_wheel_ccw`,    name: `Group ${ch} Rotate Counter-Clockwise`, desc: 'Turn wheel left (-10%)', icon: 'mdi-rotate-left' }
+          { id: `g${ch}_wheel_center`, name: `Group ${ch} Center Press (Button ${btnCenter})`, desc: 'Click / Press scroll wheel (Toggle)', icon: 'mdi-circle-slice-8' },
+          { id: `g${ch}_wheel_cw`,     name: `Group ${ch} Rotate Clockwise (Button ${btnCW})`, desc: 'Höger snurr / Dim Up (+10%)', icon: 'mdi-rotate-right' },
+          { id: `g${ch}_wheel_ccw`,    name: `Group ${ch} Rotate Counter-Clockwise (Button ${btnCCW})`, desc: 'Vänster snurr / Dim Down (-10%)', icon: 'mdi-rotate-left' }
         ];
       } else {
         const defaultButtons = {
