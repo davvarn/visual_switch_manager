@@ -1,0 +1,30 @@
+{
+"config": {
+"step": {
+"user": {
+"title": "Set up Visual Switch Manager",
+"description": "Initialize the Switch Manager to start mapping your Zigbee/Matter buttons.",
+"data": {
+"enable_advanced_logging": "Enable advanced debug logging"
+}
+}
+},
+"error": {
+"cannot_connect": "Failed to connect",
+"unknown": "Unexpected error"
+},
+"abort": {
+"already_configured": "Visual Switch Manager is already configured."
+}
+},
+"options": {
+"step": {
+"init": {
+"title": "Visual Switch Manager Options",
+"data": {
+"default_transition_time": "Default light transition time (seconds)"
+}
+}
+}
+}
+}
