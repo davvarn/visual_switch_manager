@@ -48,7 +48,7 @@ Open HACS in Home Assistant.
 
 Click the three dots in the top right -> Custom repositories.
 
-URL: https://github.com/yourusername/visual_switch_manager
+URL: https://github.com/davvarn/visual_switch_manager
 
 Category: Integration
 
