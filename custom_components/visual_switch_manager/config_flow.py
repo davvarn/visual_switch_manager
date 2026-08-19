@@ -1,11 +1,26 @@
 """Config flow for Visual Switch Manager integration."""
+import logging
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.core import callback
-import logging
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 DOMAIN = "visual_switch_manager"
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = vol.Schema({
+    vol.Optional("default_transition_time", default=1.0): vol.All(
+        vol.Coerce(float), vol.Range(min=0.0)
+    ),
+})
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 class VisualSwitchManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Visual Switch Manager."""
@@ -14,8 +29,8 @@ class VisualSwitchManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step where the user configures the integration via UI."""
-        await self.async_set_unique_id("visual_switch_manager_instance")
-        self._abort_if_unique_id_configured()
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
 
         errors = {}
 
@@ -36,21 +51,4 @@ class VisualSwitchManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return VisualSwitchManagerOptionsFlow()
-
-class VisualSwitchManagerOptionsFlow(config_entries.OptionsFlow):
-    """Handle options flow for Visual Switch Manager."""
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options_schema = vol.Schema({
-            vol.Optional(
-                "default_transition_time", 
-                default=self.config_entry.options.get("default_transition_time", 1.0)
-            ): vol.All(vol.Coerce(float), vol.Range(min=0.0)),
-        })
-
-        return self.async_show_form(step_id="init", data_schema=options_schema)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

@@ -1,10 +1,12 @@
 """The Visual Switch Manager integration for Home Assistant."""
 import logging
+from homeassistant.components import frontend
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "visual_switch_manager"
+PANEL_URL_PATH = "visual_switch_manager"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -16,6 +18,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Visual Switch Manager from a config entry."""
     _LOGGER.info("Setting up Visual Switch Manager integration")
     hass.data.setdefault(DOMAIN, {})
+
+    # Register sidebar panel
+    frontend.async_register_built_in_panel(
+        hass,
+        component_name="iframe",
+        sidebar_title="Switch Manager",
+        sidebar_icon="mdi:toggle-switch-variant",
+        frontend_url_path=PANEL_URL_PATH,
+        config={"url": "/visual_switch_manager/index.html"},
+        require_admin=False,
+    )
 
     # Store entry-specific data and resources (like unsubscribe callbacks)
     hass.data[DOMAIN][entry.entry_id] = {
@@ -57,8 +70,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except Exception:  # pragma: no cover - defensive
                 _LOGGER.exception("Error while unsubscribing listener for %s", entry.entry_id)
 
-    # If no more entries remain, remove the domain key entirely.
+    # If no more entries remain, remove sidebar panel and domain key
     if not hass.data.get(DOMAIN):
+        frontend.async_remove_panel(hass, PANEL_URL_PATH)
         hass.data.pop(DOMAIN, None)
 
     return True
