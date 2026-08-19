@@ -213,6 +213,19 @@
 
     <!-- Center Canvas View -->
     <div class="editor-panel" id="viewEditor">
+      <!-- Physical Device Binding Card -->
+      <div class="card" style="padding: 0.85rem 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="mdi mdi-link-variant" style="color: var(--accent); font-size: 1.1rem;"></i>
+            <span>Assign Physical Home Assistant Remote:</span>
+          </div>
+          <select id="haPhysicalDeviceSelect" style="max-width: 400px; padding: 0.45rem 0.75rem;" onchange="assignPhysicalDevice()">
+            <option value="">-- Discovered Physical Remotes in Home Assistant --</option>
+          </select>
+        </div>
+      </div>
+
       <div class="blueprint-canvas">
         <div class="canvas-instructions">
           <i class="mdi mdi-cursor-default-click-outline" style="color: var(--accent); font-size: 1.1rem;"></i>
@@ -623,8 +636,17 @@
     }
 
     // API Integration with Home Assistant Backend
+    let haPhysicalDevices = [];
+
     async function loadHAData() {
       try {
+        const resDevices = await fetch('/api/visual_switch_manager/devices');
+        if (resDevices.ok) {
+          haPhysicalDevices = await resDevices.json();
+          populateHAPhysicalDevices();
+          logEvent(`Discovered ${haPhysicalDevices.length} physical devices in Home Assistant`);
+        }
+
         const resEntities = await fetch('/api/visual_switch_manager/entities');
         if (resEntities.ok) {
           haEntities = await resEntities.json();
@@ -640,7 +662,26 @@
           logEvent('Loaded saved mappings from Home Assistant storage');
         }
       } catch (err) {
-        console.warn('Running in standalone mode or HA API loading:', err);
+        console.warn('Running in HA API loading:', err);
+      }
+    }
+
+    function populateHAPhysicalDevices() {
+      const select = document.getElementById('haPhysicalDeviceSelect');
+      select.innerHTML = '<option value="">-- Discovered Physical Remotes in Home Assistant --</option>';
+      haPhysicalDevices.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.name} (${d.manufacturer} ${d.model})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function assignPhysicalDevice() {
+      const selectedId = document.getElementById('haPhysicalDeviceSelect').value;
+      if (selectedId) {
+        const dev = haPhysicalDevices.find(d => d.id === selectedId);
+        logEvent(`Linked physical HA device [${dev ? dev.name : selectedId}] to active template`);
       }
     }
 
@@ -650,7 +691,7 @@
       haEntities.forEach(e => {
         const opt = document.createElement('option');
         opt.value = e.entity_id;
-        opt.label = `${e.name} (${e.entity_id})`;
+        opt.label = `${e.name} (${e.entity_id}) - [${e.state}]`;
         datalist.appendChild(opt);
       });
     }

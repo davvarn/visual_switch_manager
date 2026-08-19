@@ -84,6 +84,31 @@ class VisualSwitchManagerEntitiesView(HomeAssistantView):
         ]
         return self.json(entities)
 
+from homeassistant.helpers import device_registry as dr, storage as storage_helper
+
+class VisualSwitchManagerDevicesView(HomeAssistantView):
+    url = "/api/visual_switch_manager/devices"
+    name = "api:visual_switch_manager:devices"
+    requires_auth = True
+
+    async def get(self, request):
+        """Get all paired physical devices from Home Assistant device registry."""
+        hass: HomeAssistant = request.app["hass"]
+        dev_reg = dr.async_get(hass)
+        
+        devices = []
+        for dev in dev_reg.devices.values():
+            devices.append({
+                "id": dev.id,
+                "name": dev.name_by_user or dev.name or f"{dev.manufacturer or ''} {dev.model or ''}".strip(),
+                "manufacturer": dev.manufacturer or "Generic",
+                "model": dev.model or "Remote / Switch",
+                "area_id": dev.area_id,
+                "identifiers": [list(i) for i in dev.identifiers],
+            })
+        
+        return self.json(devices)
+
 class VisualSwitchManagerTestActionView(HomeAssistantView):
     url = "/api/visual_switch_manager/test_action"
     name = "api:visual_switch_manager:test_action"
@@ -111,6 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN]["store"] = store
     hass.http.register_view(VisualSwitchManagerMappingsView(store))
     hass.http.register_view(VisualSwitchManagerEntitiesView())
+    hass.http.register_view(VisualSwitchManagerDevicesView())
     hass.http.register_view(VisualSwitchManagerTestActionView())
 
     # Register static path for frontend assets
