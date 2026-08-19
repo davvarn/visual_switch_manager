@@ -1,5 +1,7 @@
 {
 "name": "Visual Switch Manager",
 "render_readme": true,
-"homeassistant": "2024.1.0"
+"homeassistant": "2024.1.0",
+"content": "integration",
+"zip_release": false
 }
