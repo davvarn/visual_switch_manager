@@ -1,12 +1,15 @@
 """The Visual Switch Manager integration for Home Assistant."""
 import logging
+from pathlib import Path
 from homeassistant.components import frontend
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "visual_switch_manager"
 PANEL_URL_PATH = "visual_switch_manager"
+STATIC_URL_PATH = "/visual_switch_manager_static"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -19,14 +22,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info("Setting up Visual Switch Manager integration")
     hass.data.setdefault(DOMAIN, {})
 
-    # Register sidebar panel
+    # Register static path for frontend assets
+    frontend_dir = Path(__file__).parent / "frontend"
+    if hasattr(hass.http, "async_register_static_paths"):
+        await hass.http.async_register_static_paths([
+            StaticPathConfig(
+                url_path=STATIC_URL_PATH,
+                path=str(frontend_dir),
+                cache_headers=False,
+            )
+        ])
+    else:
+        hass.http.register_static_path(
+            STATIC_URL_PATH,
+            str(frontend_dir),
+            cache_headers=False,
+        )
+
+    # Register sidebar panel pointing to our static index.html
     frontend.async_register_built_in_panel(
         hass,
         component_name="iframe",
         sidebar_title="Switch Manager",
         sidebar_icon="mdi:toggle-switch-variant",
         frontend_url_path=PANEL_URL_PATH,
-        config={"url": "/visual_switch_manager/index.html"},
+        config={"url": f"{STATIC_URL_PATH}/index.html"},
         require_admin=False,
     )
 

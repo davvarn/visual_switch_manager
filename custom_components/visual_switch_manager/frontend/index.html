@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Switch Manager</title>
+  <style>
+    :root {
+      --bg-color: #111827;
+      --card-bg: #1f2937;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-color: #374151;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      background-color: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 868px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .device-item {
+      padding: 0.75rem;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .device-item:hover, .device-item.active {
+      border-color: var(--accent);
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .device-info h4 {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .device-info p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .protocol-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background-color: #374151;
+      color: #d1d5db;
+    }
+
+    .editor-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .switch-preview-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      min-height: 320px;
+      position: relative;
+    }
+
+    /* Virtual Switch SVG / Diagram */
+    .switch-remote {
+      width: 180px;
+      height: 280px;
+      background: #2b3544;
+      border-radius: 24px;
+      border: 3px solid #4b5563;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .btn-virtual {
+      width: 100px;
+      height: 50px;
+      background: #374151;
+      border: 2px solid #6b7280;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .btn-virtual:hover {
+      background: var(--accent);
+      border-color: #93c5fd;
+      transform: scale(1.03);
+    }
+
+    .btn-virtual:active {
+      transform: scale(0.97);
+    }
+
+    .rotary-wheel {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #4b5563, #374151, #4b5563);
+      border: 3px dashed #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      transition: transform 0.3s ease;
+    }
+
+    .rotary-wheel:hover {
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .action-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    select, input {
+      background: #111827;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .log-terminal {
+      background-color: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #34d399;
+      height: 100px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <h1>Visual Switch Manager</h1>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Home Assistant Blueprint Integration</span>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span>Listening for Events (ZHA & MQTT)</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Sidebar: Device Selection -->
+    <div class="sidebar-panel">
+      <div class="card">
+        <div class="card-title">Discovered Switches</div>
+        <div class="device-list">
+          <div class="device-item active" onclick="selectDevice('IKEA STYRBAR Remote', 'Zigbee2MQTT')">
+            <div class="device-info">
+              <h4>IKEA STYRBAR Remote</h4>
+              <p>E2001 / E2002</p>
+            </div>
+            <span class="protocol-tag">Z2M</span>
+          </div>
+          <div class="device-item" onclick="selectDevice('IKEA SYMFONISK Sound Controller', 'ZHA')">
+            <div class="device-info">
+              <h4>IKEA SYMFONISK Dial</h4>
+              <p>E1744 Rotary Switch</p>
+            </div>
+            <span class="protocol-tag">ZHA</span>
+          </div>
+          <div class="device-item" onclick="selectDevice('Philips Hue Dimmer Switch', 'ZHA')">
+            <div class="device-info">
+              <h4>Hue Dimmer V2</h4>
+              <p>RWL022</p>
+            </div>
+            <span class="protocol-tag">ZHA</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Live Event Stream</div>
+        <div class="log-terminal" id="logTerminal">
+          [16:58:02] Listening on zha_event & mqtt_message...<br>
+          [16:58:15] Z2M Event: action="arrow_right_click"<br>
+          [16:58:18] ZHA Event: command="toggle"
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Main Panel: Visual Blueprint Editor -->
+    <div class="editor-panel">
+      <div class="card">
+        <div class="card-title" id="selectedDeviceTitle">IKEA STYRBAR Remote - Blueprint Editor</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Click any button or wheel on the physical device representation below to map Home Assistant actions.
+        </p>
+
+        <div class="switch-preview-container">
+          <div class="switch-remote">
+            <div class="btn-virtual" onclick="mapButton('Top Button (ON)')">ON</div>
+            
+            <div class="rotary-wheel" onclick="mapButton('Rotary Wheel / Left Right')">
+              Wheel / Turn
+            </div>
+            
+            <div class="btn-virtual" onclick="mapButton('Bottom Button (OFF)')">OFF</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card action-panel">
+        <div class="card-title" id="selectedButtonTitle">Selected Target: Top Button (ON)</div>
+        
+        <div class="action-row">
+          <label for="actionType">Action Type:</label>
+          <select id="actionType">
+            <option value="light.toggle">Toggle Light</option>
+            <option value="light.turn_on">Turn On Light (100%)</option>
+            <option value="media_player.volume_up">Volume Up</option>
+            <option value="scene.turn_on">Activate Scene</option>
+          </select>
+        </div>
+
+        <div class="action-row">
+          <label for="targetEntity">Target Entity ID:</label>
+          <input type="text" id="targetEntity" value="light.living_room_lights" style="width: 240px;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+          <button class="btn-primary" onclick="saveMapping()">Save Mapping</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function selectDevice(name, protocol) {
+      document.querySelectorAll('.device-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById('selectedDeviceTitle').innerText = name + ' (' + protocol + ') - Blueprint Editor';
+      logMessage('Selected device: ' + name);
+    }
+
+    function mapButton(btnName) {
+      document.getElementById('selectedButtonTitle').innerText = 'Selected Target: ' + btnName;
+      logMessage('Selected button: ' + btnName);
+    }
+
+    function saveMapping() {
+      const entity = document.getElementById('targetEntity').value;
+      const action = document.getElementById('actionType').value;
+      alert('Mapping saved!\nAction: ' + action + '\nTarget: ' + entity);
+      logMessage('Saved mapping: ' + action + ' -> ' + entity);
+    }
+
+    function logMessage(msg) {
+      const term = document.getElementById('logTerminal');
+      const time = new Date().toLocaleTimeString();
+      term.innerHTML += '<br>[' + time + '] ' + msg;
+      term.scrollTop = term.scrollHeight;
+    }
+  </script>
+</body>
+</html>
