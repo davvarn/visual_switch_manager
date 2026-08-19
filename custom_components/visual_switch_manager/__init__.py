@@ -35,7 +35,16 @@ async def async_execute_mapping_action(hass: HomeAssistant, action_data: dict):
         if entity_id:
             service_data["entity_id"] = entity_id
 
-        _LOGGER.info("Executing Visual Switch Manager action: %s.%s on %s", domain, service, entity_id)
+        # Handle brightness step up/down for lights
+        if domain == "light":
+            if service in ("brightness_step_up", "brightness_up"):
+                service = "turn_on"
+                service_data["brightness_step_pct"] = 10
+            elif service in ("brightness_step_down", "brightness_down"):
+                service = "turn_on"
+                service_data["brightness_step_pct"] = -10
+
+        _LOGGER.info("Executing Visual Switch Manager action: %s.%s on %s (data: %s)", domain, service, entity_id, service_data)
         await hass.services.async_call(
             domain=domain,
             service=service,
@@ -231,12 +240,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         ent_entry = ent_reg.async_get(entity_id)
-        if not ent_entry or not ent_entry.device_id:
-            return
-
-        device_id = ent_entry.device_id
+        device_id = ent_entry.device_id if ent_entry else None
         event_type_attr = new_state.attributes.get("event_type", "press")
-        _LOGGER.info("Visual Switch Manager: Event entity triggered on %s (device %s): event_type=%s", entity_id, device_id, event_type_attr)
+        _LOGGER.info("Visual Switch Manager: Event on %s (device %s): event_type=%s", entity_id, device_id, event_type_attr)
 
         saved_data = await store.async_load() or {}
         if not saved_data:
@@ -248,65 +254,84 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 continue
             
             assigned_id = dev_data.get("assigned_device_id")
-            # If user assigned this physical device or if the key matches
-            if assigned_id == device_id or blueprint_id == device_id or not assigned_id:
+            # If user assigned this physical device or if the key matches or fallback
+            if not assigned_id or assigned_id == device_id or blueprint_id == device_id:
                 mappings = dev_data.get("mappings", dev_data)
                 
-                # Match which button on the remote fired
+                # Check for BILRESA 3-channel Matter remote
                 ent_lower = entity_id.lower()
-                target_key = None
                 
-                # BILRESA Scrollwheel button mapping (Matter)
+                # Extract button number (e.g. event.bilresa_button_3 -> 3)
+                btn_num = None
+                for i in range(1, 10):
+                    if ent_lower.endswith(f"_{i}") or f"button_{i}" in ent_lower or f"_{i}_" in ent_lower or f"button_{i}_" in ent_lower:
+                        btn_num = i
+                        break
+
+                target_key = None
                 if blueprint_id == "bilresa_wheel":
-                    if "button_1" in ent_lower or "button_3" in ent_lower:
-                        target_key = "wheel_center"
-                    elif "button_6" in ent_lower:
-                        target_key = "bottom_dots"
-                    elif "button_2" in ent_lower or "button_7" in ent_lower:
-                        target_key = "wheel_cw"
-                    elif "button_8" in ent_lower:
-                        target_key = "wheel_ccw"
-                    elif "button_9" in ent_lower:
-                        target_key = "wheel_center"
+                    # Channel 1: 3=Center Press, 1=Rotate Right (CW), 2=Rotate Left (CCW)
+                    if btn_num == 3: target_key = "g1_wheel_center"
+                    elif btn_num == 1: target_key = "g1_wheel_cw"
+                    elif btn_num == 2: target_key = "g1_wheel_ccw"
+                    # Channel 2: 6=Center Press, 4=Rotate Right (CW), 5=Rotate Left (CCW)
+                    elif btn_num == 6: target_key = "g2_wheel_center"
+                    elif btn_num == 4: target_key = "g2_wheel_cw"
+                    elif btn_num == 5: target_key = "g2_wheel_ccw"
+                    # Channel 3: 9=Center Press, 7=Rotate Right (CW), 8=Rotate Left (CCW)
+                    elif btn_num == 9: target_key = "g3_wheel_center"
+                    elif btn_num == 7: target_key = "g3_wheel_cw"
+                    elif btn_num == 8: target_key = "g3_wheel_ccw"
+
+                    # Fallbacks if user configured single-group mappings
+                    if not target_key or target_key not in mappings:
+                        if btn_num in (1, 3, 6, 9): target_key = "wheel_center"
+                        elif btn_num in (1, 4, 7): target_key = "wheel_cw"
+                        elif btn_num in (2, 5, 8): target_key = "wheel_ccw"
+
                 elif blueprint_id == "bilresa_2btn":
-                    if "button_1" in ent_lower:
-                        target_key = "top_button"
-                    elif "button_2" in ent_lower:
-                        target_key = "bottom_button"
+                    if btn_num == 1: target_key = "top_button"
+                    elif btn_num == 2: target_key = "bottom_button"
                 elif blueprint_id == "styrbar":
-                    if "button_1" in ent_lower:
-                        target_key = "on"
-                    elif "button_2" in ent_lower:
-                        target_key = "off"
-                    elif "button_3" in ent_lower:
-                        target_key = "left"
-                    elif "button_4" in ent_lower:
-                        target_key = "right"
+                    if btn_num == 1: target_key = "on"
+                    elif btn_num == 2: target_key = "off"
+                    elif btn_num == 3: target_key = "left"
+                    elif btn_num == 4: target_key = "right"
                 elif blueprint_id == "somrig":
-                    if "button_1" in ent_lower:
-                        target_key = "btn1"
-                    elif "button_2" in ent_lower:
-                        target_key = "btn2"
+                    if btn_num == 1: target_key = "btn1"
+                    elif btn_num == 2: target_key = "btn2"
                 elif blueprint_id == "rodret":
-                    if "button_1" in ent_lower:
-                        target_key = "plus"
-                    elif "button_2" in ent_lower:
-                        target_key = "minus"
+                    if btn_num == 1: target_key = "plus"
+                    elif btn_num == 2: target_key = "minus"
                 elif blueprint_id in ("hue_dimmer_v1", "hue_dimmer_v2"):
-                    if "button_1" in ent_lower:
-                        target_key = "hue_on" if blueprint_id == "hue_dimmer_v2" else "on"
-                    elif "button_2" in ent_lower:
-                        target_key = "hue_up" if blueprint_id == "hue_dimmer_v2" else "up"
-                    elif "button_3" in ent_lower:
-                        target_key = "hue_down" if blueprint_id == "hue_dimmer_v2" else "down"
-                    elif "button_4" in ent_lower:
-                        target_key = "hue_off" if blueprint_id == "hue_dimmer_v2" else "off"
+                    if btn_num == 1: target_key = "hue_on" if blueprint_id == "hue_dimmer_v2" else "on"
+                    elif btn_num == 2: target_key = "hue_up" if blueprint_id == "hue_dimmer_v2" else "up"
+                    elif btn_num == 3: target_key = "hue_down" if blueprint_id == "hue_dimmer_v2" else "down"
+                    elif btn_num == 4: target_key = "hue_off" if blueprint_id == "hue_dimmer_v2" else "off"
 
                 if target_key and target_key in mappings:
                     action_info = mappings[target_key]
                     if action_info and isinstance(action_info, dict):
                         await async_execute_mapping_action(hass, action_info)
                         return
+
+                # Check if group lamp was assigned directly for that group (e.g. group_1_entity)
+                if blueprint_id == "bilresa_wheel":
+                    g_idx = 1 if btn_num in (1, 2, 3) else (2 if btn_num in (4, 5, 6) else 3)
+                    group_entity = dev_data.get(f"group_{g_idx}_entity")
+                    if group_entity:
+                        if btn_num in (3, 6, 9):
+                            # Click -> Toggle light
+                            await async_execute_mapping_action(hass, {"service": "light.toggle", "entity": group_entity})
+                            return
+                        elif btn_num in (1, 4, 7):
+                            # Rotate Right (CW) -> Brightness +10%
+                            await async_execute_mapping_action(hass, {"service": "light.brightness_step_up", "entity": group_entity})
+                            return
+                        elif btn_num in (2, 5, 8):
+                            # Rotate Left (CCW) -> Brightness -10%
+                            await async_execute_mapping_action(hass, {"service": "light.brightness_step_down", "entity": group_entity})
+                            return
 
                 # Check direct key match or button number in mapping
                 for k, action_info in mappings.items():

@@ -148,6 +148,21 @@
     .entity-select-item:hover { border-color: var(--accent); background: rgba(56, 189, 248, 0.12); }
     .entity-select-item.selected { border-color: var(--success); background: rgba(52, 211, 153, 0.15); }
 
+    .channel-card {
+      background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 10px;
+      padding: 0.65rem 0.85rem; cursor: pointer; transition: all 0.2s;
+    }
+    .channel-card:hover { border-color: rgba(56, 189, 248, 0.4); }
+    .channel-card.active {
+      border-color: var(--accent); background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.05));
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+    }
+    .group-active-indicator {
+      font-size: 0.65rem; font-weight: 800; color: var(--success); background: rgba(52, 211, 153, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.3); padding: 0.1rem 0.35rem; border-radius: 4px;
+    }
+    .group-select { padding: 0.35rem 0.5rem; font-size: 0.75rem; margin-top: 0.25rem; }
+
     /* Mappings Table View */
     .mappings-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
     .mappings-table th, .mappings-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -238,6 +253,49 @@
             <input type="text" id="haDeviceSearchInput" placeholder="🔍 Search remote name..." oninput="filterPhysicalDevices()" style="max-width: 180px; padding: 0.45rem 0.65rem; font-size: 0.8rem;">
             <select id="haPhysicalDeviceSelect" style="flex: 1; padding: 0.45rem 0.75rem; font-size: 0.82rem;" onchange="assignPhysicalDevice()">
               <option value="">-- Discovered Physical Remotes in Home Assistant --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-Channel Multi-Group Control Bar for BILRESA -->
+      <div id="bilresaGroupsCard" class="card" style="padding: 0.85rem 1.25rem; display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <div style="font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="mdi mdi-layers-triple-outline" style="color: var(--accent); font-size: 1.2rem;"></i>
+            <span>BILRESA Multi-Channel Groups (Bottom 3-Dots Button Toggles Group):</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Assign a lamp or scene per group</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
+          <!-- Group 1 -->
+          <div class="channel-card active" id="channelCard1" onclick="setActiveBilresaChannel(1)">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="font-weight: 700; font-size: 0.8rem; color: var(--accent);">● Group 1 (1 Dot)</span>
+              <span class="group-active-indicator" id="groupIndicator1">ACTIVE</span>
+            </div>
+            <select id="group1EntitySelect" class="group-select" onchange="setGroupEntity(1, this.value)" onclick="event.stopPropagation()">
+              <option value="">-- Assign Lamp for Group 1 --</option>
+            </select>
+          </div>
+          <!-- Group 2 -->
+          <div class="channel-card" id="channelCard2" onclick="setActiveBilresaChannel(2)">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="font-weight: 700; font-size: 0.8rem; color: #a855f7;">●● Group 2 (2 Dots)</span>
+              <span class="group-active-indicator" id="groupIndicator2" style="display: none;">ACTIVE</span>
+            </div>
+            <select id="group2EntitySelect" class="group-select" onchange="setGroupEntity(2, this.value)" onclick="event.stopPropagation()">
+              <option value="">-- Assign Lamp for Group 2 --</option>
+            </select>
+          </div>
+          <!-- Group 3 -->
+          <div class="channel-card" id="channelCard3" onclick="setActiveBilresaChannel(3)">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="font-weight: 700; font-size: 0.8rem; color: #f59e0b;">●●● Group 3 (3 Dots)</span>
+              <span class="group-active-indicator" id="groupIndicator3" style="display: none;">ACTIVE</span>
+            </div>
+            <select id="group3EntitySelect" class="group-select" onchange="setGroupEntity(3, this.value)" onclick="event.stopPropagation()">
+              <option value="">-- Assign Lamp for Group 3 --</option>
             </select>
           </div>
         </div>
@@ -478,31 +536,63 @@
     ];
 
     // Helper: check if a target on current device has a saved action
-    function cfg(t) { return (savedMappings[currentDeviceId] || {})[t] ? 'configured' : ''; }
+    function cfg(t) {
+      const devConfig = savedMappings[currentDeviceId] || {};
+      const mappings = devConfig.mappings || devConfig;
+      return mappings[t] ? 'configured' : '';
+    }
     function btn(id, label) { return `onclick="openActionModal('${id}','${label}')" class="interactive-element ${cfg(id)}"`; }
 
     // ----- SVG Renderers (one per device) -----
     const svgRenderers = {
 
-      bilresa_wheel: () => `
-        <svg width="190" height="320" viewBox="0 0 190 320" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="10" width="170" height="300" rx="85" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
-          <rect x="14" y="14" width="162" height="292" rx="81" fill="#f1f5f9"/>
-          <g ${btn('wheel_center','Scroll Wheel Center Press')}>
-            <circle cx="95" cy="100" r="66" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
-            <circle cx="95" cy="100" r="40" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
-            <text x="95" y="104" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">PRESS</text>
+      bilresa_wheel: () => {
+        const ch = activeBilresaChannel || 1;
+        const gKey = `g${ch}_`;
+        const gLabel = `Group ${ch}`;
+        const devConfig = savedMappings['bilresa_wheel'] || {};
+        const grpEntity = devConfig[`group_${ch}_entity`] || '';
+        
+        return `
+        <svg width="200" height="330" viewBox="0 0 200 330" xmlns="http://www.w3.org/2000/svg">
+          <!-- Remote Casing -->
+          <rect x="10" y="10" width="180" height="310" rx="90" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+          <rect x="14" y="14" width="172" height="302" rx="86" fill="#f1f5f9"/>
+
+          <!-- Active Group Header Badge on Remote -->
+          <text x="100" y="28" font-size="10" font-weight="bold" fill="${ch===1?'#38bdf8':(ch===2?'#a855f7':'#f59e0b')}" text-anchor="middle">
+            ● GROUP ${ch} ACTIVE ${grpEntity ? `(${grpEntity.split('.')[1]})` : ''}
+          </text>
+
+          <!-- Center Click Button -->
+          <g ${btn(gKey + 'wheel_center', gLabel + ' Center Click (Toggle)')}>
+            <circle cx="100" cy="110" r="66" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="100" cy="110" r="40" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+            <text x="100" y="108" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">CLICK</text>
+            <text x="100" y="122" font-size="9" font-weight="bold" fill="${ch===1?'#0284c7':(ch===2?'#9333ea':'#d97706')}" text-anchor="middle">GRP ${ch}</text>
           </g>
-          <path ${btn('wheel_cw','Rotate Clockwise (+)')} d="M 132,54 A 58 58 0 0 1 153,105" fill="none" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
-          <path ${btn('wheel_ccw','Rotate Counter-Clockwise (-)')} d="M 58,54 A 58 58 0 0 0 37,105" fill="none" stroke="#818cf8" stroke-width="7" stroke-linecap="round"/>
-          <circle cx="95" cy="190" r="3" fill="#94a3b8"/>
-          <g ${btn('bottom_dots','Bottom Scene Toggle Button (···)')}>
-            <rect x="42" y="222" width="106" height="52" rx="26" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
-            <circle cx="79" cy="248" r="3.5" fill="#475569"/>
-            <circle cx="95" cy="248" r="3.5" fill="#475569"/>
-            <circle cx="111" cy="248" r="3.5" fill="#475569"/>
+
+          <!-- Rotate Clockwise (Brightness +) -->
+          <path ${btn(gKey + 'wheel_cw', gLabel + ' Rotate Clockwise (+10%)')} d="M 140,64 A 58 58 0 0 1 161,115" fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+
+          <!-- Rotate Counter-Clockwise (Brightness -) -->
+          <path ${btn(gKey + 'wheel_ccw', gLabel + ' Rotate Counter-Clockwise (-10%)')} d="M 60,64 A 58 58 0 0 0 39,115" fill="none" stroke="#818cf8" stroke-width="8" stroke-linecap="round"/>
+
+          <circle cx="100" cy="200" r="3.5" fill="#94a3b8"/>
+
+          <!-- Bottom 3-Dots Multi-Channel Group Switcher -->
+          <g style="cursor: pointer;">
+            <rect x="42" y="232" width="116" height="54" rx="27" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+            <!-- Dot 1 -->
+            <circle cx="74" cy="259" r="${ch===1?6.5:4}" fill="${ch===1?'#38bdf8':'#64748b'}" onclick="setActiveBilresaChannel(1)"/>
+            <!-- Dot 2 -->
+            <circle cx="100" cy="259" r="${ch===2?6.5:4}" fill="${ch===2?'#a855f7':'#64748b'}" onclick="setActiveBilresaChannel(2)"/>
+            <!-- Dot 3 -->
+            <circle cx="126" cy="259" r="${ch===3?6.5:4}" fill="${ch===3?'#f59e0b':'#64748b'}" onclick="setActiveBilresaChannel(3)"/>
+            <text x="100" y="278" font-size="8.5" font-weight="bold" fill="#64748b" text-anchor="middle" pointer-events="none">3-GROUP SWITCH</text>
           </g>
-        </svg>`,
+        </svg>`;
+      },
 
       bilresa_2btn: () => `
         <svg width="180" height="310" viewBox="0 0 180 310" xmlns="http://www.w3.org/2000/svg">
@@ -791,6 +881,7 @@
     }
 
     let currentEntityDomainFilter = 'all';
+    let activeBilresaChannel = 1;
 
     function setEntityDomainFilter(domain) {
       currentEntityDomainFilter = domain;
@@ -800,9 +891,82 @@
       filterModalEntities();
     }
 
+    function setActiveBilresaChannel(ch) {
+      activeBilresaChannel = ch;
+      for (let i = 1; i <= 3; i++) {
+        const card = document.getElementById(`channelCard${i}`);
+        const ind = document.getElementById(`groupIndicator${i}`);
+        if (card) card.classList.toggle('active', i === ch);
+        if (ind) ind.style.display = i === ch ? 'inline-block' : 'none';
+      }
+      renderCanvas();
+      logEvent(`Switched to BILRESA Group ${ch}`);
+    }
+
+    function setGroupEntity(groupNum, entityId) {
+      if (!savedMappings['bilresa_wheel']) savedMappings['bilresa_wheel'] = { mappings: {} };
+      if (!savedMappings['bilresa_wheel'].mappings) {
+        const old = { ...savedMappings['bilresa_wheel'] };
+        savedMappings['bilresa_wheel'] = { mappings: old };
+      }
+      
+      savedMappings['bilresa_wheel'][`group_${groupNum}_entity`] = entityId;
+      
+      // Auto configure default smart actions if entity selected
+      if (entityId) {
+        const ent = haEntities.find(e => e.entity_id === entityId);
+        const name = ent ? ent.name : entityId;
+        const gKey = `g${groupNum}_`;
+        
+        savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_center'] = {
+          trigger: 'press', category: 'light', service: 'light.toggle', entity: entityId, label: `Group ${groupNum} Center Click (${name})`
+        };
+        savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_cw'] = {
+          trigger: 'rotate_cw', category: 'light', service: 'light.brightness_step_up', entity: entityId, label: `Group ${groupNum} Brightness +10% (${name})`
+        };
+        savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_ccw'] = {
+          trigger: 'rotate_ccw', category: 'light', service: 'light.brightness_step_down', entity: entityId, label: `Group ${groupNum} Brightness -10% (${name})`
+        };
+        logEvent(`💡 Assigned ${name} to BILRESA Group ${groupNum} (Toggle + Dimming auto-configured)`);
+      } else {
+        logEvent(`Cleared entity for BILRESA Group ${groupNum}`);
+      }
+
+      saveAllMappingsToHA();
+      renderCanvas();
+      renderMappingsTable();
+    }
+
+    function populateGroupEntitySelects() {
+      for (let g = 1; g <= 3; g++) {
+        const select = document.getElementById(`group${g}EntitySelect`);
+        if (!select) continue;
+        const current = (savedMappings['bilresa_wheel'] || {})[`group_${g}_entity`] || '';
+        
+        select.innerHTML = `<option value="">-- Assign Lamp/Scene for Group ${g} --</option>`;
+        
+        // Populate lights, scenes, switches
+        haEntities.filter(e => e.domain === 'light' || e.domain === 'scene' || e.domain === 'switch').forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = e.entity_id;
+          opt.textContent = `${e.name} (${e.entity_id})`;
+          select.appendChild(opt);
+        });
+
+        if (current) select.value = current;
+      }
+    }
+
     function selectDevice(devId) {
       currentDeviceId = devId;
       renderDeviceList();
+      
+      const grpCard = document.getElementById('bilresaGroupsCard');
+      if (grpCard) {
+        grpCard.style.display = devId === 'bilresa_wheel' ? 'block' : 'none';
+        if (devId === 'bilresa_wheel') populateGroupEntitySelects();
+      }
+
       renderCanvas();
       
       // Auto-select assigned physical remote if previously linked
@@ -1073,6 +1237,7 @@
         if (resEntities.ok) {
           haEntities = await resEntities.json();
           logEvent(`✅ Discovered ${haEntities.length} controllable target entities in HA`);
+          populateGroupEntitySelects();
         } else {
           logEvent(`⚠️ Entities API: HTTP ${resEntities.status}`);
         }
@@ -1091,6 +1256,10 @@
             const devConfig = savedMappings[currentDeviceId] || {};
             if (devConfig.assigned_device_id) {
               document.getElementById('haPhysicalDeviceSelect').value = devConfig.assigned_device_id;
+            }
+            if (currentDeviceId === 'bilresa_wheel') {
+              document.getElementById('bilresaGroupsCard').style.display = 'block';
+              populateGroupEntitySelects();
             }
             renderCanvas();
             renderMappingsTable();
