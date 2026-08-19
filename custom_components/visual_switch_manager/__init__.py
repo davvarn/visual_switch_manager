@@ -173,13 +173,20 @@ class VisualSwitchManagerTestActionView(HomeAssistantView):
         return self.json({"status": "executed", "action": data})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Visual Switch Manager component via YAML."""
+    """Set up the Visual Switch Manager component via YAML or auto-discovery."""
     hass.data.setdefault(DOMAIN, {})
+    # Automatically ensure a config entry exists so async_setup_entry is executed
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Visual Switch Manager from a config entry."""
-    _LOGGER.info("Setting up Visual Switch Manager integration")
+    _LOGGER.warning("Visual Switch Manager: Setting up integration entry %s", entry.entry_id)
     hass.data.setdefault(DOMAIN, {})
 
     # Register persistent storage and HTTP API views
@@ -224,61 +231,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unsubscribers": [],
     }
 
-    async def handle_state_changed(event):
-        """Handle state changes of event entities (Matter, modern HA remotes)."""
-        entity_id = event.data.get("entity_id", "")
-        new_state = event.data.get("new_state")
-
-        if not entity_id.startswith("event.") and not entity_id.startswith("sensor."):
-            return
-
-        if new_state is None or new_state.state in ("unavailable", "unknown"):
-            return
-
-        ent_entry = ent_reg.async_get(entity_id)
-        device_id = ent_entry.device_id if ent_entry else None
-        event_type_attr = new_state.attributes.get("event_type", "press") if new_state.attributes else "press"
-        _LOGGER.warning("Visual Switch Manager: Event triggered on %s (device %s, state=%s, event_type=%s)", entity_id, device_id, new_state.state, event_type_attr)
-
+    async def async_process_state_changed(entity_id: str, new_state):
+        """Process state change on event entity."""
         saved_data = await store.async_load() or {}
         if not saved_data:
+            _LOGGER.debug("Visual Switch Manager: No saved mappings configured")
             return
 
-        # Find matching switch configuration
+        ent_reg = er.async_get(hass)
+        ent_entry = ent_reg.async_get(entity_id)
+        device_id = ent_entry.device_id if ent_entry else None
+        ent_lower = entity_id.lower()
+
+        # Robust button number extraction (handles _button_3, _knapp_3, _3, button_3)
+        btn_num = None
+        m = re.search(r'(?:button|knapp|switch|input|btn)?_?([1-9])$', ent_lower)
+        if m:
+            btn_num = int(m.group(1))
+        else:
+            m = re.search(r'button_([1-9])\b', ent_lower)
+            if m:
+                btn_num = int(m.group(1))
+
+        _LOGGER.warning("Visual Switch Manager: Processing entity %s (device %s, btn_num=%s)", entity_id, device_id, btn_num)
+
         for blueprint_id, dev_data in saved_data.items():
             if not isinstance(dev_data, dict):
                 continue
-            
+
             assigned_id = dev_data.get("assigned_device_id")
             
-            # Check if this event belongs to this remote
+            # Match check: assigned_id match, device_id match, or fallback
             is_match = False
             if assigned_id and device_id and assigned_id == device_id:
                 is_match = True
             elif not assigned_id or blueprint_id == device_id:
                 is_match = True
-            elif assigned_id:
+            elif assigned_id and ent_reg:
                 device_entries = er.async_entries_for_device(ent_reg, assigned_id)
                 if any(e.entity_id == entity_id for e in device_entries):
                     is_match = True
+            elif blueprint_id == "bilresa_wheel" and btn_num is not None:
+                # If BILRESA is configured in plugin, match button event
+                is_match = True
 
             if not is_match:
                 continue
 
             mappings = dev_data.get("mappings", dev_data)
-            ent_lower = entity_id.lower()
-            
-            # Robust button number extraction (handles _button_3, _knapp_3, _3, button_3)
-            btn_num = None
-            m = re.search(r'(?:button|knapp|switch|input|btn)?_?([1-9])$', ent_lower)
-            if m:
-                btn_num = int(m.group(1))
-            else:
-                m = re.search(r'button_([1-9])\b', ent_lower)
-                if m:
-                    btn_num = int(m.group(1))
-
-            _LOGGER.warning("Visual Switch Manager: Match for blueprint %s (assigned: %s), detected button number: %s", blueprint_id, assigned_id, btn_num)
 
             target_key = None
             if blueprint_id == "bilresa_wheel":
@@ -295,7 +295,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 elif btn_num == 7: target_key = "g3_wheel_cw"
                 elif btn_num == 8: target_key = "g3_wheel_ccw"
 
-                # Fallbacks if user configured single-group mappings
                 if not target_key or target_key not in mappings:
                     if btn_num in (1, 3, 6, 9): target_key = "wheel_center"
                     elif btn_num in (1, 4, 7): target_key = "wheel_cw"
@@ -324,7 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if target_key and target_key in mappings:
                 action_info = mappings[target_key]
                 if action_info and isinstance(action_info, dict) and "service" in action_info:
-                    _LOGGER.warning("Visual Switch Manager: Executing mapping for %s: %s", target_key, action_info)
+                    _LOGGER.warning("Visual Switch Manager: Executing mapped action for %s: %s", target_key, action_info)
                     await async_execute_mapping_action(hass, action_info)
                     return
 
@@ -356,6 +355,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if isinstance(single_action, dict) and "service" in single_action:
                     await async_execute_mapping_action(hass, single_action)
 
+    @callback
+    def handle_state_changed(event):
+        """Synchronously capture state changes of event entities and dispatch."""
+        entity_id = event.data.get("entity_id", "")
+        if not entity_id.startswith("event.") and not entity_id.startswith("sensor."):
+            return
+
+        new_state = event.data.get("new_state")
+        if new_state is None or new_state.state in ("unavailable", "unknown"):
+            return
+
+        event_type_attr = new_state.attributes.get("event_type", "press") if new_state.attributes else "press"
+        _LOGGER.warning("Visual Switch Manager: RAW EVENT DETECTED on %s (state=%s, event_type=%s)", entity_id, new_state.state, event_type_attr)
+        hass.async_create_task(async_process_state_changed(entity_id, new_state))
+
     async def handle_physical_event(event_type: str, event_data: dict):
         """Process incoming physical switch event from ZHA, Z2M, Matter, deCONZ."""
         _LOGGER.warning("Received %s event: %s", event_type, event_data)
@@ -377,12 +391,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if action_info and isinstance(action_info, dict) and "service" in action_info:
                     await async_execute_mapping_action(hass, action_info)
 
+    @callback
+    def handle_physical_event_cb(event_type: str, event_data: dict):
+        hass.async_create_task(handle_physical_event(event_type, event_data))
+
     # Event listeners
     unsub_state = hass.bus.async_listen(EVENT_STATE_CHANGED, handle_state_changed)
-    unsub_zha = hass.bus.async_listen("zha_event", lambda e: hass.async_create_task(handle_physical_event("ZHA", e.data)))
-    unsub_z2m = hass.bus.async_listen("mqtt_message", lambda e: hass.async_create_task(handle_physical_event("Zigbee2MQTT", e.data)))
-    unsub_matter = hass.bus.async_listen("matter_event", lambda e: hass.async_create_task(handle_physical_event("Matter", e.data)))
-    unsub_deconz = hass.bus.async_listen("deconz_event", lambda e: hass.async_create_task(handle_physical_event("deCONZ", e.data)))
+    unsub_zha = hass.bus.async_listen("zha_event", lambda e: handle_physical_event_cb("ZHA", e.data))
+    unsub_z2m = hass.bus.async_listen("mqtt_message", lambda e: handle_physical_event_cb("Zigbee2MQTT", e.data))
+    unsub_matter = hass.bus.async_listen("matter_event", lambda e: handle_physical_event_cb("Matter", e.data))
+    unsub_deconz = hass.bus.async_listen("deconz_event", lambda e: handle_physical_event_cb("deCONZ", e.data))
 
     hass.data[DOMAIN][entry.entry_id]["unsubscribers"].extend([
         unsub_state,
@@ -391,6 +409,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         unsub_matter,
         unsub_deconz,
     ])
+    _LOGGER.warning("Visual Switch Manager: Event listeners successfully registered and ACTIVE!")
 
     return True
 
