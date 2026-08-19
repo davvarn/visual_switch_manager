@@ -318,6 +318,9 @@
         </button>
         <div style="display: flex; gap: 0.75rem;">
           <button class="btn btn-secondary" onclick="closeActionModal()">Cancel</button>
+          <button class="btn" style="background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3);" onclick="simulateEvent()">
+            <i class="mdi mdi-play-circle-outline"></i> Test Action
+          </button>
           <button class="btn btn-primary" onclick="saveActionModal()">
             <i class="mdi mdi-check"></i> Save Action
           </button>
@@ -353,16 +356,68 @@
     let savedMappings = {};
     let haEntities = [];
     let haPhysicalDevices = [];
+    let haAccessToken = null;
 
-    // Fetch helper that always sends HA session cookie
+    // ---------------------------------------------------------------
+    // Home Assistant Authentication
+    // HA iframe panels are same-origin, so we can read the HA
+    // access token from localStorage. The REST API requires
+    // Authorization: Bearer <token> — cookies/credentials don't work.
+    // ---------------------------------------------------------------
+    function getHAToken() {
+      // Method 1: Read from HA's hassTokens in localStorage
+      try {
+        const stored = localStorage.getItem('hassTokens');
+        if (stored) {
+          const tokens = JSON.parse(stored);
+          if (tokens && tokens.access_token) {
+            return tokens.access_token;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read hassTokens from localStorage:', e);
+      }
+
+      // Method 2: Try to get from parent window (HA frontend)
+      try {
+        if (window.parent && window.parent.hassConnection) {
+          return window.parent.hassConnection.auth.data.access_token;
+        }
+      } catch (e) { /* cross-origin or not available */ }
+
+      // Method 3: Try URL search params (some HA versions pass it)
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token') || params.get('auth');
+        if (token) return token;
+      } catch (e) { /* not available */ }
+
+      return null;
+    }
+
+    // Authenticated fetch helpers
     const api = {
-      get: (url) => fetch(url, { credentials: 'same-origin' }),
-      post: (url, body) => fetch(url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
+      headers() {
+        const h = {};
+        if (haAccessToken) {
+          h['Authorization'] = `Bearer ${haAccessToken}`;
+        }
+        return h;
+      },
+      async get(url) {
+        return fetch(url, {
+          headers: this.headers(),
+          credentials: 'same-origin'
+        });
+      },
+      async post(url, body) {
+        return fetch(url, {
+          method: 'POST',
+          headers: { ...this.headers(), 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify(body)
+        });
+      }
     };
 
     // Catalog of All Supported Devices
@@ -864,33 +919,51 @@
 
     // ---- API integration ----
     async function loadHAData() {
+      // --- Devices ---
       try {
         const resDevices = await api.get('/api/visual_switch_manager/devices');
         if (resDevices.ok) {
           haPhysicalDevices = await resDevices.json();
           populateHAPhysicalDevices();
-          logEvent(`Discovered ${haPhysicalDevices.length} physical HA devices`);
+          logEvent(`✅ Discovered ${haPhysicalDevices.length} HA devices`);
         } else {
-          logEvent(`⚠️ Devices API: HTTP ${resDevices.status}`);
+          const txt = await resDevices.text().catch(() => '');
+          logEvent(`⚠️ Devices API: HTTP ${resDevices.status} — ${txt.substring(0, 100)}`);
         }
+      } catch (err) {
+        logEvent(`❌ Devices fetch failed: ${err}`);
+      }
 
+      // --- Entities ---
+      try {
         const resEntities = await api.get('/api/visual_switch_manager/entities');
         if (resEntities.ok) {
           haEntities = await resEntities.json();
           populateEntitiesDatalist();
-          logEvent(`Discovered ${haEntities.length} controllable entities`);
-        }
-
-        const resMappings = await api.get('/api/visual_switch_manager/mappings');
-        if (resMappings.ok) {
-          savedMappings = await resMappings.json();
-          renderCanvas();
-          renderMappingsTable();
-          logEvent('Loaded saved mappings');
+          logEvent(`✅ Discovered ${haEntities.length} controllable entities`);
+        } else {
+          logEvent(`⚠️ Entities API: HTTP ${resEntities.status}`);
         }
       } catch (err) {
-        logEvent(`⚠️ API error: ${err}`);
-        console.warn(err);
+        logEvent(`❌ Entities fetch failed: ${err}`);
+      }
+
+      // --- Saved Mappings ---
+      try {
+        const resMappings = await api.get('/api/visual_switch_manager/mappings');
+        if (resMappings.ok) {
+          const data = await resMappings.json();
+          if (data && typeof data === 'object') {
+            savedMappings = data;
+            renderCanvas();
+            renderMappingsTable();
+            logEvent('✅ Loaded saved mappings');
+          }
+        } else {
+          logEvent(`⚠️ Mappings API: HTTP ${resMappings.status}`);
+        }
+      } catch (err) {
+        logEvent(`❌ Mappings fetch failed: ${err}`);
       }
     }
 
@@ -973,6 +1046,22 @@ action: []
     }
 
     window.onload = () => {
+      // Initialize HA auth token FIRST - this is critical
+      haAccessToken = getHAToken();
+      const statusEl = document.getElementById('haConnectionStatus');
+      const statusDot = document.querySelector('.status-dot');
+      if (haAccessToken) {
+        logEvent('🔑 HA auth token acquired from localStorage');
+        statusEl.textContent = 'Authenticated with Home Assistant';
+      } else {
+        logEvent('⚠️ No HA auth token found — API calls may fail with 401');
+        logEvent('ℹ️ Make sure you are logged into Home Assistant first');
+        statusEl.textContent = 'Not authenticated — log in to HA first';
+        statusEl.style.color = '#fbbf24';
+        statusDot.style.backgroundColor = '#fbbf24';
+        statusDot.style.boxShadow = '0 0 8px #fbbf24';
+      }
+
       updateActionServices();
       renderDeviceList();
       renderCanvas();
