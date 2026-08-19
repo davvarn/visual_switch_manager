@@ -163,6 +163,18 @@
     }
     .group-select { padding: 0.35rem 0.5rem; font-size: 0.75rem; margin-top: 0.25rem; }
 
+    /* Side Button Inspector Cards */
+    .btn-inspector-card {
+      padding: 0.65rem 0.85rem; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color);
+      border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; transition: all 0.2s ease;
+    }
+    .btn-inspector-card:hover { border-color: rgba(56, 189, 248, 0.5); background: rgba(30, 41, 59, 0.7); }
+    .btn-inspector-card.configured { border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.06); }
+    .btn-inspector-icon {
+      width: 34px; height: 34px; border-radius: 8px; background: #0f172a; border: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--accent); flex-shrink: 0;
+    }
+
     /* Mappings Table View */
     .mappings-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
     .mappings-table th, .mappings-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -301,14 +313,32 @@
         </div>
       </div>
 
-      <div class="blueprint-canvas">
-        <div class="canvas-instructions">
-          <i class="mdi mdi-cursor-default-click-outline" style="color: var(--accent); font-size: 1.1rem;"></i>
-          <span>Click any button or wheel region on the physical remote to configure its action</span>
+      <!-- Side-by-Side: Visual Remote Diagram + Button Selection List -->
+      <div style="display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 1.25rem; align-items: start;">
+        <!-- Left: Interactive Visual Remote -->
+        <div class="blueprint-canvas" style="min-height: 440px;">
+          <div class="canvas-instructions">
+            <i class="mdi mdi-cursor-default-click-outline" style="color: var(--accent); font-size: 1.1rem;"></i>
+            <span>Click any button or wheel to configure</span>
+          </div>
+          <div id="deviceSvgContainer" style="margin-top: 1.25rem;">
+            <!-- Dynamically injected SVG -->
+          </div>
         </div>
 
-        <div id="deviceSvgContainer" style="margin-top: 1.5rem;">
-          <!-- Dynamically injected SVG -->
+        <!-- Right: Button Selection & Configuration List -->
+        <div class="card" style="padding: 1.25rem;">
+          <div class="card-header" style="margin-bottom: 0.85rem;">
+            <div class="card-title">
+              <i class="mdi mdi-gesture-tap-button" style="color: var(--accent);"></i>
+              <span id="buttonInspectorTitle">Button Controls & Actions</span>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);" id="buttonInspectorSubtitle">Click any to edit</span>
+          </div>
+
+          <div id="buttonInspectorList" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 420px; overflow-y: auto; padding-right: 0.25rem;">
+            <!-- Populated dynamically by JavaScript -->
+          </div>
         </div>
       </div>
     </div>
@@ -789,14 +819,14 @@
         </svg>`,
 
       aqara_opple6: () => `
-        <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="8" width="204" height="204" rx="30" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
+        <svg width="220" height="260" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="8" width="204" height="244" rx="26" fill="#f1f5f9" stroke="#94a3b8" stroke-width="3"/>
           ${['btn1','btn2','btn3','btn4','btn5','btn6'].map((id,i) => {
-            const col = i % 3, row = Math.floor(i / 2);
-            const x = 22 + col * 64, y = 22 + row * 84;
+            const col = i % 2, row = Math.floor(i / 2);
+            const x = 20 + col * 94, y = 20 + row * 74;
             return `<g ${btn(id,'Button ' + (i+1))}>
-              <rect x="${x}" y="${y}" width="54" height="54" rx="12" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
-              <text x="${x+27}" y="${y+32}" font-size="14" font-weight="bold" fill="#334155" text-anchor="middle">${i+1}</text>
+              <rect x="${x}" y="${y}" width="86" height="64" rx="12" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+              <text x="${x+43}" y="${y+38}" font-size="16" font-weight="bold" fill="#334155" text-anchor="middle">${i+1}</text>
             </g>`;
           }).join('')}
         </svg>`,
@@ -900,6 +930,7 @@
         if (ind) ind.style.display = i === ch ? 'inline-block' : 'none';
       }
       renderCanvas();
+      renderButtonInspector();
       logEvent(`Switched to BILRESA Group ${ch}`);
     }
 
@@ -912,28 +943,31 @@
       
       savedMappings['bilresa_wheel'][`group_${groupNum}_entity`] = entityId;
       
-      // Auto configure default smart actions if entity selected
+      const gKey = `g${groupNum}_`;
       if (entityId) {
         const ent = haEntities.find(e => e.entity_id === entityId);
         const name = ent ? ent.name : entityId;
-        const gKey = `g${groupNum}_`;
         
         savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_center'] = {
-          trigger: 'press', category: 'light', service: 'light.toggle', entity: entityId, label: `Group ${groupNum} Center Click (${name})`
+          trigger: 'press', category: 'light', service: 'light.toggle', entity: entityId, label: `Group ${groupNum} Center Click (Toggle)`
         };
         savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_cw'] = {
-          trigger: 'rotate_cw', category: 'light', service: 'light.brightness_step_up', entity: entityId, label: `Group ${groupNum} Brightness +10% (${name})`
+          trigger: 'rotate_cw', category: 'light', service: 'light.brightness_step_up', entity: entityId, label: `Group ${groupNum} Rotate Clockwise (+10%)`
         };
         savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_ccw'] = {
-          trigger: 'rotate_ccw', category: 'light', service: 'light.brightness_step_down', entity: entityId, label: `Group ${groupNum} Brightness -10% (${name})`
+          trigger: 'rotate_ccw', category: 'light', service: 'light.brightness_step_down', entity: entityId, label: `Group ${groupNum} Rotate Counter-Clockwise (-10%)`
         };
-        logEvent(`💡 Assigned ${name} to BILRESA Group ${groupNum} (Toggle + Dimming auto-configured)`);
+        logEvent(`💡 Group ${groupNum}: ${name} mapped to Center Click (Toggle) and Scrollwheel (Dimming)`);
       } else {
+        delete savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_center'];
+        delete savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_cw'];
+        delete savedMappings['bilresa_wheel'].mappings[gKey + 'wheel_ccw'];
         logEvent(`Cleared entity for BILRESA Group ${groupNum}`);
       }
 
       saveAllMappingsToHA();
       renderCanvas();
+      renderButtonInspector();
       renderMappingsTable();
     }
 
@@ -968,6 +1002,7 @@
       }
 
       renderCanvas();
+      renderButtonInspector();
       
       // Auto-select assigned physical remote if previously linked
       const devConfig = savedMappings[currentDeviceId] || {};
@@ -988,22 +1023,154 @@
       }
     }
 
+    // Render Side Button Inspector List for direct button selection & inspection
+    function renderButtonInspector() {
+      const list = document.getElementById('buttonInspectorList');
+      const titleEl = document.getElementById('buttonInspectorTitle');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const dev = deviceCatalog.find(d => d.id === currentDeviceId);
+      if (titleEl && dev) {
+        titleEl.textContent = `${dev.name} — Controls`;
+      }
+
+      const devConfig = savedMappings[currentDeviceId] || {};
+      const mappings = devConfig.mappings || devConfig;
+      
+      let buttons = [];
+      if (currentDeviceId === 'bilresa_wheel') {
+        const ch = activeBilresaChannel || 1;
+        buttons = [
+          { id: `g${ch}_wheel_center`, name: `Group ${ch} Center Press`, desc: 'Click / Press scroll wheel', icon: 'mdi-circle-slice-8' },
+          { id: `g${ch}_wheel_cw`,     name: `Group ${ch} Rotate Clockwise`, desc: 'Turn wheel right (+10%)', icon: 'mdi-rotate-right' },
+          { id: `g${ch}_wheel_ccw`,    name: `Group ${ch} Rotate Counter-Clockwise`, desc: 'Turn wheel left (-10%)', icon: 'mdi-rotate-left' }
+        ];
+      } else {
+        const defaultButtons = {
+          bilresa_2btn: [
+            { id: 'top_button', name: 'Top Button (ON / Dim Up)', desc: 'Single / Long press', icon: 'mdi-arrow-up-bold' },
+            { id: 'bottom_button', name: 'Bottom Button (OFF / Dim Down)', desc: 'Single / Long press', icon: 'mdi-arrow-down-bold' }
+          ],
+          styrbar: [
+            { id: 'on', name: 'Top Button (ON / Brightness Up)', desc: 'Single click / Hold', icon: 'mdi-arrow-up-bold' },
+            { id: 'off', name: 'Bottom Button (OFF / Brightness Down)', desc: 'Single click / Hold', icon: 'mdi-arrow-down-bold' },
+            { id: 'left', name: 'Left Arrow (◀ Previous)', desc: 'Previous Scene / Color', icon: 'mdi-arrow-left-bold' },
+            { id: 'right', name: 'Right Arrow (▶ Next)', desc: 'Next Scene / Color', icon: 'mdi-arrow-right-bold' }
+          ],
+          symfonisk: [
+            { id: 'dial_press', name: 'Dial Center Click', desc: 'Play / Pause', icon: 'mdi-knob' },
+            { id: 'dial_cw', name: 'Rotate Clockwise', desc: 'Volume Up', icon: 'mdi-rotate-right' },
+            { id: 'dial_ccw', name: 'Rotate Counter-Clockwise', desc: 'Volume Down', icon: 'mdi-rotate-left' }
+          ],
+          tradfri_onoff: [
+            { id: 'on', name: 'Top Button (ON / Dim Up)', desc: 'Turn on or increase brightness', icon: 'mdi-arrow-up-bold' },
+            { id: 'off', name: 'Bottom Button (OFF / Dim Down)', desc: 'Turn off or decrease brightness', icon: 'mdi-arrow-down-bold' }
+          ],
+          tradfri_5btn: [
+            { id: 'power', name: 'Center Power Button', desc: 'Toggle Light', icon: 'mdi-power' },
+            { id: 'up', name: 'Top Button (▲)', desc: 'Brightness Up', icon: 'mdi-arrow-up-bold' },
+            { id: 'down', name: 'Bottom Button (▼)', desc: 'Brightness Down', icon: 'mdi-arrow-down-bold' },
+            { id: 'left', name: 'Left Button (◀)', desc: 'Color / Scene Left', icon: 'mdi-arrow-left-bold' },
+            { id: 'right', name: 'Right Button (▶)', desc: 'Color / Scene Right', icon: 'mdi-arrow-right-bold' }
+          ],
+          somrig: [
+            { id: 'btn1', name: 'Shortcut Button 1 (·)', desc: 'Single / Double / Hold', icon: 'mdi-numeric-1-circle' },
+            { id: 'btn2', name: 'Shortcut Button 2 (··)', desc: 'Single / Double / Hold', icon: 'mdi-numeric-2-circle' }
+          ],
+          rodret: [
+            { id: 'plus', name: 'Plus Button (+)', desc: 'Turn On / Brightness Up', icon: 'mdi-plus-circle' },
+            { id: 'minus', name: 'Minus Button (−)', desc: 'Turn Off / Brightness Down', icon: 'mdi-minus-circle' }
+          ],
+          hue_dimmer_v2: [
+            { id: 'hue_on', name: 'Hue Power ON', desc: 'Power / Scene Cycle', icon: 'mdi-power' },
+            { id: 'hue_up', name: 'Dim Up', desc: 'Brightness Increase', icon: 'mdi-brightness-5' },
+            { id: 'hue_down', name: 'Dim Down', desc: 'Brightness Decrease', icon: 'mdi-brightness-4' },
+            { id: 'hue_off', name: 'Hue Power OFF', desc: 'Turn Off', icon: 'mdi-power-off' }
+          ],
+          hue_dimmer_v1: [
+            { id: 'on', name: 'ON Button', desc: 'Power On', icon: 'mdi-power' },
+            { id: 'up', name: 'Dim Up', desc: 'Brightness Increase', icon: 'mdi-brightness-5' },
+            { id: 'down', name: 'Dim Down', desc: 'Brightness Decrease', icon: 'mdi-brightness-4' },
+            { id: 'off', name: 'OFF Button', desc: 'Power Off', icon: 'mdi-power-off' }
+          ],
+          aqara_opple6: [
+            { id: 'btn1', name: 'Button 1 (Top Left)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-1-box' },
+            { id: 'btn2', name: 'Button 2 (Top Right)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-2-box' },
+            { id: 'btn3', name: 'Button 3 (Mid Left)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-3-box' },
+            { id: 'btn4', name: 'Button 4 (Mid Right)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-4-box' },
+            { id: 'btn5', name: 'Button 5 (Bottom Left)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-5-box' },
+            { id: 'btn6', name: 'Button 6 (Bottom Right)', desc: 'Press / Double / Hold', icon: 'mdi-numeric-6-box' }
+          ]
+        };
+        buttons = defaultButtons[currentDeviceId] || [
+          { id: 'press', name: 'Main Button Press', desc: 'Single / Double / Hold', icon: 'mdi-radiobox-marked' }
+        ];
+      }
+
+      buttons.forEach(b => {
+        const map = mappings[b.id];
+        const isConfig = !!map;
+        const item = document.createElement('div');
+        item.className = `btn-inspector-card ${isConfig ? 'configured' : ''}`;
+        
+        let entName = 'No entity';
+        if (map && map.entity) {
+          const ent = haEntities.find(e => e.entity_id === map.entity);
+          entName = ent ? ent.name : map.entity;
+        }
+
+        item.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;">
+            <div class="btn-inspector-icon"><i class="mdi ${b.icon}"></i></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:0.85rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.name}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${isConfig ? `<span style="color:var(--success);font-weight:600;">${map.service}</span> → <span style="color:var(--text-main);">${entName}</span>` : b.desc}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.4rem;align-items:center;">
+            ${isConfig ? `<button class="btn btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.7rem;color:var(--success);" onclick="event.stopPropagation();testSpecificAction('${map.service}','${map.entity||''}')">⚡ Test</button>` : ''}
+            <button class="btn ${isConfig ? 'btn-secondary' : 'btn-primary'}" style="padding:0.3rem 0.65rem;font-size:0.75rem;" onclick="openActionModal('${b.id}','${b.name}')">
+              ${isConfig ? 'Edit' : '+ Configure'}
+            </button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function testSpecificAction(service, entity) {
+      logEvent(`⚡ Testing action: ${service} → ${entity || '(No entity)'}`);
+      try {
+        const res = await api.post('/api/visual_switch_manager/test_action', { service, entity });
+        if (res.ok) {
+          logEvent(`✅ Executed: ${service} on ${entity}!`);
+        } else {
+          logEvent(`⚠️ HTTP ${res.status} executing action`);
+        }
+      } catch (err) {
+        logEvent(`❌ Test error: ${err}`);
+      }
+    }
+
     // Action Services per Domain Category
     const serviceOptions = {
       light: [
-        { val: 'light.toggle',        label: 'Toggle Light' },
+        { val: 'light.toggle',        label: 'Toggle Light (On/Off)' },
         { val: 'light.turn_on',       label: 'Turn On (100%)' },
         { val: 'light.turn_off',      label: 'Turn Off' },
-        { val: 'light.brightness_step_up',   label: 'Brightness +10%' },
-        { val: 'light.brightness_step_down', label: 'Brightness -10%' }
+        { val: 'light.brightness_step_up',   label: 'Brightness +10% (Dim Up)' },
+        { val: 'light.brightness_step_down', label: 'Brightness -10% (Dim Down)' }
       ],
       scene: [
         { val: 'scene.turn_on', label: 'Activate Scene' }
       ],
       media_player: [
         { val: 'media_player.media_play_pause', label: 'Play / Pause' },
-        { val: 'media_player.volume_up',        label: 'Volume Up' },
-        { val: 'media_player.volume_down',      label: 'Volume Down' },
+        { val: 'media_player.volume_up',        label: 'Volume Up (+5%)' },
+        { val: 'media_player.volume_down',      label: 'Volume Down (-5%)' },
         { val: 'media_player.media_next_track', label: 'Next Track' },
         { val: 'media_player.media_previous_track', label: 'Previous Track' }
       ],
@@ -1028,7 +1195,6 @@
         el.textContent = opt.label;
         svcSelect.appendChild(el);
       });
-      // Switch entity filter to match category
       if (['light', 'scene', 'media_player', 'switch', 'automation'].includes(cat)) {
         setEntityDomainFilter(cat === 'automation' ? 'automation' : cat);
       }
@@ -1054,8 +1220,9 @@
       }
 
       filtered.forEach(e => {
+        const isSel = e.entity_id === currentSelected;
         const item = document.createElement('div');
-        item.className = `entity-select-item ${e.entity_id === currentSelected ? 'selected' : ''}`;
+        item.className = `entity-select-item ${isSel ? 'selected' : ''}`;
         
         let icon = 'mdi-cube-outline';
         if (e.domain === 'light') icon = 'mdi-lightbulb';
@@ -1066,13 +1233,13 @@
 
         item.innerHTML = `
           <div style="display:flex;align-items:center;gap:0.5rem;">
-            <i class="mdi ${icon}" style="color:var(--accent);"></i>
+            <i class="mdi ${isSel ? 'mdi-check-circle' : icon}" style="color:${isSel ? 'var(--success)' : 'var(--accent)'};font-size:1.1rem;"></i>
             <div>
               <div style="font-weight:600;color:var(--text-main);">${e.name}</div>
               <div style="font-size:0.7rem;color:var(--text-muted);">${e.entity_id}</div>
             </div>
           </div>
-          <span style="font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:4px;background:rgba(15,23,42,0.8);color:var(--text-muted);">${e.state}</span>
+          <span style="font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:4px;background:rgba(15,23,42,0.8);color:${e.state==='on'?'var(--success)':'var(--text-muted)'};font-weight:600;">${e.state}</span>
         `;
         item.onclick = () => selectModalEntity(e.entity_id, e.name);
         resultsContainer.appendChild(item);
@@ -1080,9 +1247,9 @@
     }
 
     function selectModalEntity(entityId, entityName) {
-      document.getElementById('targetEntityInput').value = entityId;
-      document.getElementById('selectedEntityName').textContent = entityName;
-      document.getElementById('selectedEntityId').textContent = entityId;
+      document.getElementById('targetEntityInput').value = entityId || '';
+      document.getElementById('selectedEntityName').textContent = entityName || 'None';
+      document.getElementById('selectedEntityId').textContent = entityId || 'None';
       filterModalEntities();
     }
 
@@ -1095,8 +1262,12 @@
       const mappings = devConfig.mappings || devConfig;
       const saved = mappings[targetId];
 
+      let defaultTrigger = 'press';
+      if (targetId.includes('wheel_cw') || targetId.includes('dial_cw')) defaultTrigger = 'rotate_cw';
+      else if (targetId.includes('wheel_ccw') || targetId.includes('dial_ccw')) defaultTrigger = 'rotate_ccw';
+
       if (saved) {
-        document.getElementById('clickTrigger').value = saved.trigger || 'press';
+        document.getElementById('clickTrigger').value = saved.trigger || defaultTrigger;
         document.getElementById('actionCategory').value = saved.category || 'light';
         updateActionServices();
         document.getElementById('actionService').value = saved.service || 'light.toggle';
@@ -1104,14 +1275,17 @@
         const ent = haEntities.find(e => e.entity_id === saved.entity);
         selectModalEntity(saved.entity || '', ent ? ent.name : (saved.entity || 'None'));
       } else {
-        document.getElementById('clickTrigger').value = 'press';
+        document.getElementById('clickTrigger').value = defaultTrigger;
         document.getElementById('actionCategory').value = 'light';
         updateActionServices();
+        if (targetId.includes('wheel_cw')) document.getElementById('actionService').value = 'light.brightness_step_up';
+        else if (targetId.includes('wheel_ccw')) document.getElementById('actionService').value = 'light.brightness_step_down';
+        else document.getElementById('actionService').value = 'light.toggle';
         selectModalEntity('', 'None');
       }
 
       document.getElementById('targetEntitySearch').value = '';
-      setEntityDomainFilter('all');
+      setEntityDomainFilter('light');
       document.getElementById('actionModal').classList.add('open');
     }
 
@@ -1157,9 +1331,10 @@
 
       closeActionModal();
       renderCanvas();
+      renderButtonInspector();
       renderMappingsTable();
       saveAllMappingsToHA();
-      logEvent(`Saved: ${activeModalTarget.label} → ${service} [${entity}]`);
+      logEvent(`💾 Saved: ${activeModalTarget.label} → ${service} [${entity || 'No entity'}]`);
     }
 
     function deleteCurrentActionModal() {
@@ -1170,9 +1345,10 @@
           delete mappings[activeModalTarget.id];
           closeActionModal();
           renderCanvas();
+          renderButtonInspector();
           renderMappingsTable();
           saveAllMappingsToHA();
-          logEvent(`Deleted mapping for ${activeModalTarget.label}`);
+          logEvent(`🗑️ Deleted mapping for ${activeModalTarget.label}`);
         }
       }
     }
@@ -1262,6 +1438,7 @@
               populateGroupEntitySelects();
             }
             renderCanvas();
+            renderButtonInspector();
             renderMappingsTable();
             logEvent('✅ Loaded saved mappings from Home Assistant');
           }
