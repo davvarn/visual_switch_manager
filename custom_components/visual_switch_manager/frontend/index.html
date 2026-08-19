@@ -539,6 +539,27 @@
       document.getElementById('actionModal').classList.remove('open');
     }
 
+    async function simulateEvent() {
+      const service = document.getElementById('actionService').value;
+      const entity = document.getElementById('targetEntityInput').value;
+
+      logEvent(`⚡ Executing Home Assistant Action: ${service} -> ${entity}...`);
+      try {
+        const res = await fetch('/api/visual_switch_manager/test_action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service, entity })
+        });
+        if (res.ok) {
+          logEvent(`✅ SUCCESS: ${service} executed on ${entity}!`);
+        } else {
+          logEvent(`⚠️ Executed (HTTP ${res.status})`);
+        }
+      } catch (err) {
+        logEvent(`❌ Error: ${err}`);
+      }
+    }
+
     function saveActionModal() {
       if (!savedMappings[currentDeviceId]) savedMappings[currentDeviceId] = {};
       const trigger = document.getElementById('clickTrigger').value;

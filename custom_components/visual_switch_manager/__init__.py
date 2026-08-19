@@ -15,6 +15,34 @@ STORAGE_KEY = "visual_switch_manager_mappings"
 STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
 
+async def async_execute_mapping_action(hass: HomeAssistant, action_data: dict):
+    """Execute a mapped service call in Home Assistant."""
+    try:
+        service_str = action_data.get("service")  # e.g., "light.toggle"
+        entity_id = action_data.get("entity")    # e.g., "light.vardagsrum_tak"
+
+        if not service_str:
+            return
+
+        parts = service_str.split(".", 1)
+        if len(parts) != 2:
+            return
+
+        domain, service = parts[0], parts[1]
+        service_data = {}
+        if entity_id:
+            service_data["entity_id"] = entity_id
+
+        _LOGGER.info("Executing Visual Switch Manager action: %s.%s on %s", domain, service, entity_id)
+        await hass.services.async_call(
+            domain=domain,
+            service=service,
+            service_data=service_data,
+            blocking=False,
+        )
+    except Exception as err:
+        _LOGGER.exception("Failed to execute mapped action: %s", err)
+
 class VisualSwitchManagerMappingsView(HomeAssistantView):
     url = "/api/visual_switch_manager/mappings"
     name = "api:visual_switch_manager:mappings"
@@ -56,6 +84,18 @@ class VisualSwitchManagerEntitiesView(HomeAssistantView):
         ]
         return self.json(entities)
 
+class VisualSwitchManagerTestActionView(HomeAssistantView):
+    url = "/api/visual_switch_manager/test_action"
+    name = "api:visual_switch_manager:test_action"
+    requires_auth = True
+
+    async def post(self, request):
+        """Execute a service action immediately for live testing."""
+        hass: HomeAssistant = request.app["hass"]
+        data = await request.json()
+        await async_execute_mapping_action(hass, data)
+        return self.json({"status": "executed", "action": data})
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Visual Switch Manager component via YAML (if any, but we prefer UI)."""
     hass.data.setdefault(DOMAIN, {})
@@ -71,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN]["store"] = store
     hass.http.register_view(VisualSwitchManagerMappingsView(store))
     hass.http.register_view(VisualSwitchManagerEntitiesView())
+    hass.http.register_view(VisualSwitchManagerTestActionView())
 
     # Register static path for frontend assets
     frontend_dir = Path(__file__).parent / "frontend"
@@ -100,27 +141,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         require_admin=False,
     )
 
-    # Store entry-specific data and resources (like unsubscribe callbacks)
+    # Store entry-specific data and resources
     hass.data[DOMAIN][entry.entry_id] = {
         "data": entry.data,
         "unsubscribers": [],
     }
 
-    async def handle_zha_event(event):
-        """Handle events from ZHA (Zigbee Home Automation)."""
-        _LOGGER.debug(f"Received ZHA event: {event.data}")
-        
-    async def handle_z2m_event(event):
-        """Handle events from Zigbee2MQTT via MQTT."""
-        _LOGGER.debug(f"Received Z2M event: {event.data}")
+    async def handle_physical_event(event_type: str, event_data: dict):
+        """Process incoming physical switch event and execute matching Home Assistant action."""
+        _LOGGER.debug("Received %s event: %s", event_type, event_data)
+        saved_data = await store.async_load() or {}
+        if not saved_data:
+            return
 
-    # Register listeners and keep the unsubscribe callables so we can clean up.
-    unsub_zha = hass.bus.async_listen("zha_event", handle_zha_event)
-    unsub_z2m = hass.bus.async_listen("mqtt_message", handle_z2m_event)
+        # Execute mapped actions for configured switches
+        for dev_id, dev_mappings in saved_data.items():
+            for target_id, action_info in dev_mappings.items():
+                if action_info and isinstance(action_info, dict):
+                    await async_execute_mapping_action(hass, action_info)
+
+    # Listeners for ZHA, Zigbee2MQTT, Matter, and deCONZ
+    unsub_zha = hass.bus.async_listen("zha_event", lambda e: hass.async_create_task(handle_physical_event("ZHA", e.data)))
+    unsub_z2m = hass.bus.async_listen("mqtt_message", lambda e: hass.async_create_task(handle_physical_event("Zigbee2MQTT", e.data)))
+    unsub_matter = hass.bus.async_listen("matter_event", lambda e: hass.async_create_task(handle_physical_event("Matter", e.data)))
+    unsub_deconz = hass.bus.async_listen("deconz_event", lambda e: hass.async_create_task(handle_physical_event("deCONZ", e.data)))
 
     hass.data[DOMAIN][entry.entry_id]["unsubscribers"].extend([
         unsub_zha,
         unsub_z2m,
+        unsub_matter,
+        unsub_deconz,
     ])
 
     return True
