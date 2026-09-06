@@ -1027,22 +1027,66 @@
     const BILRESA_NAMES = ['bilresa', 'scroll', 'wheel remote'];
     const API_BASE = '/api/visual_switch_manager';
 
-    // =================== HELPERS ===================
-    function getToken() {
-      try { return JSON.parse(localStorage.getItem('hassTokens') || '{}').access_token || null; } catch { return null; }
+    // =================== HA AUTH TOKEN ===================
+    // HA iframe panels are cross-origin and cannot access the main app localStorage.
+    // We try multiple methods in priority order to obtain a valid Bearer token.
+    let _cachedToken = null;
+
+    async function getToken() {
+      if (_cachedToken) return _cachedToken;
+
+      // 1. URL query param ?auth=TOKEN — HA injects this into iframe src
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const a = p.get('auth') || p.get('access_token');
+        if (a) { _cachedToken = a; return _cachedToken; }
+      } catch(e) {}
+
+      // 2. window.parent.hassConnection (Lovelace panels share connection)
+      try {
+        if (window.parent && window.parent.hassConnection) {
+          const conn = await window.parent.hassConnection;
+          const token = conn?.options?.auth?.data?.access_token;
+          if (token) { _cachedToken = token; return _cachedToken; }
+        }
+      } catch(e) {}
+
+      // 3. window.parent.__tokenCache (older HA)
+      try {
+        if (window.parent && window.parent.__tokenCache) {
+          const cache = window.parent.__tokenCache;
+          const first = Object.values(cache)[0];
+          if (first?.access_token) { _cachedToken = first.access_token; return _cachedToken; }
+        }
+      } catch(e) {}
+
+      // 4. localStorage under known HA keys (same-origin only)
+      for (const key of ['hassTokens', 'ha_auth_tokens', 'tokens']) {
+        try {
+          const raw = localStorage.getItem(key) || window.parent.localStorage.getItem(key);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+          const tok = parsed?.access_token || (Array.isArray(parsed) && parsed[0]?.access_token);
+          if (tok) { _cachedToken = tok; return _cachedToken; }
+        } catch(e) {}
+      }
+
+      return null;
     }
-    function authHeader() {
-      const t = getToken();
-      return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
-    }
+
     async function apiGet(path) {
-      const r = await fetch(API_BASE + path, { headers: authHeader() });
-      if (!r.ok) throw new Error(r.status);
+      const token = await getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const r = await fetch(API_BASE + path, { headers, credentials: 'include' });
+      if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
       return r.json();
     }
     async function apiPost(path, body) {
-      const r = await fetch(API_BASE + path, { method: 'POST', headers: authHeader(), body: JSON.stringify(body) });
-      if (!r.ok) throw new Error(r.status);
+      const token = await getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const r = await fetch(API_BASE + path, { method: 'POST', headers, credentials: 'include', body: JSON.stringify(body) });
+      if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
       return r.json();
     }
 
@@ -1070,6 +1114,14 @@
 
     // =================== INIT ===================
     async function loadAll() {
+      // First, resolve auth token and log which method worked
+      const tok = await getToken();
+      if (tok) {
+        log(`Auth token found (${tok.length} chars) — connecting to HA API...`, 'blue');
+      } else {
+        log('No auth token found! Trying without token (may fail with 406)...', 'amber');
+      }
+
       try {
         const [devs, ents, maps] = await Promise.all([
           apiGet('/devices'),
@@ -1084,9 +1136,9 @@
         document.getElementById('connStatus').querySelector('div').style.background = 'var(--success)';
         document.getElementById('connText').textContent = 'Connected to HA';
 
-        log(`Discovered ${allDevices.length} physical switch/remote devices in HA`, 'green');
-        log(`Discovered ${allEntities.length} controllable target entities in HA`, 'green');
-        log(`Loaded saved mappings from Home Assistant`, 'blue');
+        log(`✅ Discovered ${allDevices.length} physical switch/remote devices in HA`, 'green');
+        log(`✅ Discovered ${allEntities.length} controllable target entities in HA`, 'green');
+        log(`✅ Saved mappings loaded from Home Assistant`, 'blue');
 
         renderDevList();
         populateGroupSelects();
@@ -1096,8 +1148,16 @@
       } catch (e) {
         document.getElementById('connText').textContent = 'Connection Error';
         document.getElementById('connStatus').querySelector('div').style.background = 'var(--danger)';
-        log('Error connecting to Home Assistant API: ' + e, 'amber');
-        showToast('Could not load from HA. Check browser console.', 'error');
+        const errMsg = String(e);
+        if (errMsg.includes('406')) {
+          log('❌ HTTP 406 — Auth token is missing or invalid. Open browser DevTools → Network → check /api/visual_switch_manager/devices headers.', 'amber');
+          log('💡 Tip: Try opening Home Assistant in a new tab, then navigate back to this panel.', 'amber');
+        } else if (errMsg.includes('401')) {
+          log('❌ HTTP 401 — Unauthorized. Token expired. Please reload HA.', 'amber');
+        } else {
+          log('❌ Error connecting to Home Assistant API: ' + errMsg, 'amber');
+        }
+        showToast('Could not load from HA. See Live Bus Monitor for details.', 'error');
       }
     }
 
