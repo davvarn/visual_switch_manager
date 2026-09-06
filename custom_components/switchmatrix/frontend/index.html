@@ -25,7 +25,7 @@
       --success: #34d399;
       --warning: #fbbf24;
       --danger: #f87171;
-      --sidebar-width: 330px;
+      --sidebar-width: 320px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -128,7 +128,8 @@
     }
     .filter-pill {
       font-size: 0.7rem;
-      padding: 0.2rem 0.55rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
       border-radius: 6px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -173,15 +174,15 @@
       box-shadow: 0 0 12px var(--primary-glow);
     }
     .device-icon-box {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 8px;
       background: #090d16;
       border: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       color: var(--primary);
       flex-shrink: 0;
     }
@@ -190,14 +191,14 @@
       min-width: 0;
     }
     .device-name {
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .device-sub {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       margin-top: 2px;
       display: flex;
@@ -227,45 +228,109 @@
       overflow: hidden;
     }
     .canvas-header {
-      padding: 1rem 1.5rem;
+      padding: 0.85rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(8px);
+      flex-shrink: 0;
     }
     .canvas-device-info h2 {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
     }
     .canvas-device-info p {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       margin-top: 2px;
     }
+
+    /* Channel / Group Selector Bar */
+    .channel-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-shrink: 0;
+    }
+    .channel-tab {
+      flex: 1;
+      max-width: 220px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.6rem 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      transition: all 0.2s;
+    }
+    .channel-tab:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: var(--bg-card-hover);
+    }
+    .channel-tab.active {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.12);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+    .channel-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-1 { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+    .dot-2 { background: #c084fc; box-shadow: 0 0 8px #c084fc; }
+    .dot-3 { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+
+    .channel-tab-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .channel-tab-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .channel-tab-target {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
     .canvas-viewport {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
+      padding: 1.5rem;
       position: relative;
+      overflow-y: auto;
     }
 
-    /* Interactive Switch Digital Twin Styles */
+    /* Interactive Switch Digital Twin */
     .interactive-zone {
       cursor: pointer;
       transition: all 0.2s ease;
     }
     .interactive-zone:hover {
-      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7));
-      fill-opacity: 0.85;
+      filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8));
     }
     .interactive-zone.active {
-      filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.9));
+      filter: drop-shadow(0 0 18px rgba(52, 211, 153, 0.95));
       stroke: #34d399 !important;
-      stroke-width: 3px !important;
+      stroke-width: 3.5px !important;
     }
 
     /* Right: Automation Flow Builder */
@@ -280,7 +345,7 @@
     .flow-content {
       flex: 1;
       overflow-y: auto;
-      padding: 1.25rem;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
@@ -308,7 +373,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: var(--text-main);
     }
@@ -326,11 +391,10 @@
       border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
-    /* Form Inputs */
     label {
       display: block;
-      font-size: 0.72rem;
-      font-weight: 600;
+      font-size: 0.7rem;
+      font-weight: 700;
       color: var(--text-muted);
       margin-bottom: 0.35rem;
       text-transform: uppercase;
@@ -353,20 +417,106 @@
       box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
+    /* Target Entity Selector Container */
+    .entity-domain-pills {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      margin-bottom: 0.55rem;
+    }
+    .domain-pill {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .domain-pill:hover, .domain-pill.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .entity-picker-list {
+      max-height: 170px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.4rem;
+      background: var(--bg-base);
+      margin-bottom: 0.75rem;
+    }
+    .entity-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .entity-picker-item:hover {
+      background: var(--bg-card);
+    }
+    .entity-picker-item.selected {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: var(--success);
+    }
+    .entity-item-icon {
+      font-size: 1.15rem;
+      color: var(--primary);
+    }
+    .entity-item-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .entity-item-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .entity-item-sub {
+      font-size: 0.67rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .entity-item-badge {
+      font-size: 0.62rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .state-on { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+    .state-off { background: rgba(148, 163, 184, 0.15); color: var(--text-muted); }
+
     /* Preset Chips */
     .preset-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
+      gap: 0.45rem;
       margin-bottom: 0.75rem;
     }
     .preset-btn {
-      padding: 0.5rem 0.65rem;
+      padding: 0.45rem 0.6rem;
       border-radius: 8px;
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      font-size: 0.75rem;
+      font-size: 0.73rem;
+      font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -381,6 +531,7 @@
       border-color: var(--success);
       background: rgba(52, 211, 153, 0.15);
       color: var(--success);
+      font-weight: 700;
     }
 
     /* Buttons */
@@ -388,10 +539,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      font-size: 0.82rem;
+      gap: 0.45rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      padding: 0.6rem 1.1rem;
+      padding: 0.6rem 1rem;
       border-radius: 8px;
       cursor: pointer;
       border: none;
@@ -415,30 +566,21 @@
       background: var(--bg-card-hover);
       border-color: rgba(255, 255, 255, 0.2);
     }
-    .btn-success {
-      background: var(--success);
-      color: #000;
-    }
-    .btn-success:hover {
-      filter: brightness(1.1);
-    }
 
-    /* YAML Code Preview Box */
     .yaml-preview {
       background: #060911;
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 0.85rem;
+      padding: 0.75rem;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       line-height: 1.45;
       color: #e2e8f0;
-      max-height: 190px;
+      max-height: 160px;
       overflow-y: auto;
       white-space: pre;
     }
 
-    /* Live Notification Toast */
     #toast {
       position: fixed;
       bottom: 1.5rem;
@@ -471,14 +613,11 @@
     <div class="brand">
       <i class="mdi mdi-matrix"></i>
       <span>SwitchMatrix</span>
-      <span style="font-size: 0.65rem; font-weight: 500; color: var(--text-muted); margin-left: 0.5rem; border: 1px solid var(--border-color); padding: 0.1rem 0.4rem; border-radius: 4px;">Universal Switch Automation Studio</span>
+      <span style="font-size: 0.65rem; font-weight: 500; color: var(--text-muted); margin-left: 0.5rem; border: 1px solid var(--border-color); padding: 0.1rem 0.4rem; border-radius: 4px;">Universal Studio</span>
     </div>
     <div class="top-actions">
       <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="loadDevices()">
         <i class="mdi mdi-refresh"></i> Refresh Devices
-      </button>
-      <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="toggleSavedModal()">
-        <i class="mdi mdi-file-document-multiple-outline"></i> Manage Automations
       </button>
     </div>
   </header>
@@ -491,7 +630,7 @@
       <div class="sidebar-header">
         <div class="search-box">
           <i class="mdi mdi-magnify"></i>
-          <input type="text" id="deviceSearchInput" placeholder="Filter switches by name, room, protocol..." oninput="filterDevices()">
+          <input type="text" id="deviceSearchInput" placeholder="Filter switches by name or room..." oninput="filterDevices()">
         </div>
         <div class="filter-pills" id="protocolFilterPills">
           <div class="filter-pill active" onclick="setProtocolFilter('all')">All</div>
@@ -517,6 +656,31 @@
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;" id="activeDeviceBadges">
           <!-- Dynamic Protocol and Area Badges -->
+        </div>
+      </div>
+
+      <!-- 3-Channel Group Selector Bar for IKEA BILRESA -->
+      <div class="channel-bar" id="bilresaChannelBar" style="display: none;">
+        <div class="channel-tab active" id="chTab1" onclick="setBilresaChannel(1)">
+          <div class="channel-dot dot-1"></div>
+          <div class="channel-tab-info">
+            <span class="channel-tab-title">Group 1 (1 Dot)</span>
+            <span class="channel-tab-target" id="grp1TargetText">Tap to assign light</span>
+          </div>
+        </div>
+        <div class="channel-tab" id="chTab2" onclick="setBilresaChannel(2)">
+          <div class="channel-dot dot-2"></div>
+          <div class="channel-tab-info">
+            <span class="channel-tab-title">Group 2 (2 Dots)</span>
+            <span class="channel-tab-target" id="grp2TargetText">Tap to assign light</span>
+          </div>
+        </div>
+        <div class="channel-tab" id="chTab3" onclick="setBilresaChannel(3)">
+          <div class="channel-dot dot-3"></div>
+          <div class="channel-tab-info">
+            <span class="channel-tab-title">Group 3 (3 Dots)</span>
+            <span class="channel-tab-target" id="grp3TargetText">Tap to assign light</span>
+          </div>
         </div>
       </div>
 
@@ -548,13 +712,11 @@
 
           <label>Physical Gesture / Action</label>
           <select id="actionGestureSelect" onchange="updateAutomationYAML()">
-            <option value="single_press">Single Click / Press</option>
+            <option value="single_press">Single Click / Press (Toggle)</option>
             <option value="double_press">Double Click / Multi-Tap (2x)</option>
-            <option value="triple_press">Triple Click (3x)</option>
             <option value="long_press">Long Press / Hold</option>
-            <option value="release">Release</option>
-            <option value="rotate_cw">Rotate Clockwise (+)</option>
-            <option value="rotate_ccw">Rotate Counter-Clockwise (-)</option>
+            <option value="rotate_cw">Rotate Clockwise (+10% Dim Up)</option>
+            <option value="rotate_ccw">Rotate Counter-Clockwise (-10% Dim Down)</option>
           </select>
         </div>
 
@@ -578,8 +740,8 @@
             <button class="preset-btn" onclick="toggleCondition('time_night', this)">
               <i class="mdi mdi-clock-outline"></i> Night (22-06)
             </button>
-            <button class="preset-btn" onclick="toggleCondition('clear', this)">
-              <i class="mdi mdi-close"></i> Always Execute
+            <button class="preset-btn selected" onclick="toggleCondition('clear', this)">
+              <i class="mdi mdi-check-circle"></i> Always Execute
             </button>
           </div>
         </div>
@@ -594,7 +756,7 @@
             <span class="step-badge" style="background: rgba(52,211,153,0.15); color: var(--success); border-color: rgba(52,211,153,0.3);">Action</span>
           </div>
 
-          <label>Quick Action Workflow Presets</label>
+          <label>Quick Action Presets</label>
           <div class="preset-grid">
             <button class="preset-btn selected" onclick="applyPreset('toggle', this)">
               <i class="mdi mdi-toggle-switch"></i> Toggle Light
@@ -610,10 +772,22 @@
             </button>
           </div>
 
-          <label>Target Entity (Lights, Switches, Scenes)</label>
-          <select id="targetEntitySelect" onchange="updateAutomationYAML()">
-            <option value="">-- Select Target Device in Home Assistant --</option>
-          </select>
+          <!-- Advanced Target Entity Picker with Search & Domain Pills -->
+          <label>Target Entity</label>
+          <div class="entity-domain-pills">
+            <div class="domain-pill active" onclick="setEntityDomainFilter('all')">All</div>
+            <div class="domain-pill" onclick="setEntityDomainFilter('light')">💡 Lights</div>
+            <div class="domain-pill" onclick="setEntityDomainFilter('switch')">🔌 Switches</div>
+            <div class="domain-pill" onclick="setEntityDomainFilter('scene')">🎭 Scenes</div>
+            <div class="domain-pill" onclick="setEntityDomainFilter('media_player')">🎵 Media</div>
+          </div>
+          
+          <input type="text" id="entitySearchInput" placeholder="🔍 Search lamp or room (e.g. Tak, Sovrum)..." oninput="renderEntityPicker()" style="margin-bottom:0.45rem;">
+          
+          <div class="entity-picker-list" id="entityPickerList">
+            <!-- Dynamically populated entity items -->
+          </div>
+          <input type="hidden" id="selectedTargetEntity" value="">
 
           <label>Action Service</label>
           <select id="actionServiceSelect" onchange="updateAutomationYAML()">
@@ -663,14 +837,15 @@
     // State
     let discoveredDevices = [];
     let selectedDevice = null;
-    let selectedCapabilities = null;
     let selectedZone = null;
     let haEntities = [];
     let activeConditions = [];
     let activePreset = 'toggle';
     let currentProtocolFilter = 'all';
+    let currentEntityDomainFilter = 'all';
+    let activeBilresaChannel = 1;
+    let channelAssignments = { 1: '', 2: '', 3: '' };
 
-    // WebSocket / Token Helper
     function getHAToken() {
       try {
         const tokens = JSON.parse(localStorage.getItem('hassTokens') || '{}');
@@ -679,7 +854,6 @@
       return null;
     }
 
-    // Call WebSocket or fallback REST
     async function callAPI(endpoint, data = {}) {
       const token = getHAToken();
       const headers = { 'Content-Type': 'application/json' };
@@ -693,7 +867,6 @@
       return await res.json();
     }
 
-    // Show Toast
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').innerText = msg;
@@ -708,7 +881,6 @@
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // Fetch switches from API
         const res = await fetch('/api/visual_switch_manager/devices', { headers });
         if (res.ok) {
           discoveredDevices = await res.json();
@@ -718,10 +890,10 @@
           }
         }
       } catch (e) {
-        console.warn("Using fallback device introspector", e);
+        console.warn("Error loading devices", e);
       }
 
-      // Fetch controllable entities
+      // Fetch entities
       try {
         const token = getHAToken();
         const headers = {};
@@ -729,7 +901,7 @@
         const resEnt = await fetch('/api/visual_switch_manager/entities', { headers });
         if (resEnt.ok) {
           haEntities = await resEnt.json();
-          populateEntitySelect();
+          renderEntityPicker();
         }
       } catch (e) {}
     }
@@ -741,7 +913,22 @@
       const search = (document.getElementById('deviceSearchInput').value || '').toLowerCase();
 
       const filtered = discoveredDevices.filter(d => {
-        const matchProto = currentProtocolFilter === 'all' || (d.protocol || '').toLowerCase().includes(currentProtocolFilter);
+        const p = (d.protocol || '').toLowerCase();
+        let matchProto = false;
+        if (currentProtocolFilter === 'all') {
+          matchProto = true;
+        } else if (currentProtocolFilter === 'matter') {
+          matchProto = p === 'matter' || p.includes('matter');
+        } else if (currentProtocolFilter === 'zha') {
+          matchProto = p === 'zha' || p.includes('zha');
+        } else if (currentProtocolFilter === 'zigbee2mqtt') {
+          matchProto = p.includes('zigbee') || p.includes('z2m') || p.includes('mqtt');
+        } else if (currentProtocolFilter === 'zwave_js') {
+          matchProto = p.includes('zwave');
+        } else if (currentProtocolFilter === 'shelly') {
+          matchProto = p.includes('shelly');
+        }
+
         const matchSearch = !search || d.name.toLowerCase().includes(search) || (d.manufacturer || '').toLowerCase().includes(search);
         return matchProto && matchSearch;
       });
@@ -758,9 +945,10 @@
         card.onclick = () => selectDevice(d);
 
         let icon = 'mdi-toggle-switch-outline';
-        if (d.name.toLowerCase().includes('wheel') || d.name.toLowerCase().includes('bilresa')) icon = 'mdi-circle-double';
-        else if (d.name.toLowerCase().includes('dial') || d.name.toLowerCase().includes('symfonisk')) icon = 'mdi-knob';
-        else if (d.name.toLowerCase().includes('remote') || d.name.toLowerCase().includes('styrbar')) icon = 'mdi-view-grid-outline';
+        const lowerName = d.name.toLowerCase();
+        if (lowerName.includes('wheel') || lowerName.includes('bilresa')) icon = 'mdi-circle-double';
+        else if (lowerName.includes('dial') || lowerName.includes('symfonisk')) icon = 'mdi-knob';
+        else if (lowerName.includes('remote') || lowerName.includes('styrbar')) icon = 'mdi-view-grid-outline';
 
         const proto = (d.protocol || 'matter').toLowerCase();
         let protoClass = `proto-${proto}`;
@@ -772,7 +960,7 @@
             <div class="device-name">${d.name}</div>
             <div class="device-sub">
               <span class="proto-badge ${protoClass}">${proto}</span>
-              <span>${d.manufacturer || 'Controller'}</span>
+              <span>${d.area_name || d.manufacturer || 'Controller'}</span>
             </div>
           </div>
         `;
@@ -789,52 +977,92 @@
       
       const badgeBox = document.getElementById('activeDeviceBadges');
       badgeBox.innerHTML = `
-        <span class="proto-badge proto-matter" style="font-size:0.75rem;">${device.protocol || 'Matter'}</span>
-        ${device.area_name ? `<span class="proto-badge proto-generic" style="font-size:0.75rem;"><i class="mdi mdi-map-marker"></i> ${device.area_name}</span>` : ''}
+        <span class="proto-badge proto-${device.protocol || 'matter'}" style="font-size:0.75rem;">${device.protocol || 'Matter'}</span>
+        ${device.area_name && device.area_name !== 'Unassigned' ? `<span class="proto-badge proto-generic" style="font-size:0.75rem;"><i class="mdi mdi-map-marker"></i> ${device.area_name}</span>` : ''}
       `;
+
+      // Check if IKEA BILRESA
+      const name = (device.name || '').toLowerCase();
+      const isBilresa = name.includes('bilresa') || name.includes('scroll') || name.includes('wheel');
+      document.getElementById('bilresaChannelBar').style.display = isBilresa ? 'flex' : 'none';
 
       renderDigitalTwin(device);
     }
 
-    // Interactive Digital Twin SVG Generators
+    // Set Channel for BILRESA
+    function setBilresaChannel(ch) {
+      activeBilresaChannel = ch;
+      [1, 2, 3].forEach(i => {
+        const tab = document.getElementById(`chTab${i}`);
+        if (tab) tab.classList.toggle('active', i === ch);
+      });
+
+      // Update Zone selection to this channel's center button
+      const btnCenter = ch === 1 ? 3 : (ch === 2 ? 6 : 9);
+      selectZone(`Group ${ch} Center Click (Button ${btnCenter})`, 'single_press', 'light.toggle');
+      renderDigitalTwin(selectedDevice);
+    }
+
+    // Interactive Digital Twin SVG
     function renderDigitalTwin(device) {
       const vp = document.getElementById('canvasViewport');
+      if (!device) return;
       const name = (device.name || '').toLowerCase();
 
       // Case 1: IKEA BILRESA Scroll Wheel
       if (name.includes('bilresa') || name.includes('scroll') || name.includes('wheel')) {
+        const ch = activeBilresaChannel;
+        const btnCenter = ch === 1 ? 3 : (ch === 2 ? 6 : 9);
+        const btnCW = ch === 1 ? 1 : (ch === 2 ? 4 : 7);
+        const btnCCW = ch === 1 ? 2 : (ch === 2 ? 5 : 8);
+
+        // Dot glowing state
+        const dot1Color = ch === 1 ? '#38bdf8' : '#334155';
+        const dot2Color = ch === 2 ? '#c084fc' : '#334155';
+        const dot3Color = ch === 3 ? '#fbbf24' : '#334155';
+
         vp.innerHTML = `
-          <svg width="220" height="360" viewBox="0 0 220 360" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="200" height="340" rx="100" fill="#0f172a" stroke="#334155" stroke-width="4"/>
-            <rect x="15" y="15" width="190" height="330" rx="95" fill="#1e293b"/>
-            
-            <!-- Center Button -->
-            <g class="interactive-zone" onclick="selectZone('Center Click', 'single_press', 'light.toggle')">
-              <circle cx="110" cy="115" r="70" fill="#334155" stroke="#64748b" stroke-width="2.5"/>
-              <circle cx="110" cy="115" r="44" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
-              <text x="110" y="119" font-size="12" font-weight="bold" fill="#f8fafc" text-anchor="middle">CLICK</text>
-            </g>
-            
-            <!-- Rotate CW -->
-            <path class="interactive-zone" onclick="selectZone('Rotate Clockwise (+)', 'rotate_cw', 'light.brightness_step_up')"
-              d="M 152,65 A 64 64 0 0 1 176,122" fill="none" stroke="#38bdf8" stroke-width="9" stroke-linecap="round"/>
-            
-            <!-- Rotate CCW -->
-            <path class="interactive-zone" onclick="selectZone('Rotate Counter-Clockwise (-)', 'rotate_ccw', 'light.brightness_step_down')"
-              d="M 68,65 A 64 64 0 0 0 44,122" fill="none" stroke="#818cf8" stroke-width="9" stroke-linecap="round"/>
-            
-            <circle cx="110" cy="215" r="3.5" fill="#64748b"/>
-            
-            <!-- 3-Dots Group Button -->
-            <g class="interactive-zone" onclick="selectZone('3-Dots Channel Switch', 'single_press', 'scene.turn_on')">
-              <rect x="52" y="248" width="116" height="54" rx="27" fill="#334155" stroke="#64748b" stroke-width="2"/>
-              <circle cx="84" cy="275" r="5" fill="#38bdf8"/>
-              <circle cx="110" cy="275" r="5" fill="#a855f7"/>
-              <circle cx="136" cy="275" r="5" fill="#f59e0b"/>
-            </g>
-          </svg>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+            <div style="font-size:0.78rem;font-weight:700;color:${ch === 1 ? '#38bdf8' : (ch === 2 ? '#c084fc' : '#fbbf24')};background:rgba(15,23,42,0.8);padding:0.3rem 0.8rem;border-radius:20px;border:1px solid rgba(255,255,255,0.1);">
+              ● GROUP ${ch} (${ch} DOT${ch > 1 ? 'S' : ''}) ACTIVE
+            </div>
+
+            <svg width="220" height="360" viewBox="0 0 220 360" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="200" height="340" rx="100" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+              <rect x="15" y="15" width="190" height="330" rx="95" fill="#1e293b"/>
+              
+              <!-- Center Button -->
+              <g class="interactive-zone" onclick="selectZone('Group ${ch} Center Click (Button ${btnCenter})', 'single_press', 'light.toggle')">
+                <circle cx="110" cy="115" r="70" fill="#334155" stroke="#64748b" stroke-width="2.5"/>
+                <circle cx="110" cy="115" r="44" fill="#475569" stroke="#94a3b8" stroke-width="2"/>
+                <text x="110" y="119" font-size="11" font-weight="bold" fill="#f8fafc" text-anchor="middle">CLICK (${btnCenter})</text>
+              </g>
+              
+              <!-- Rotate CW -->
+              <path class="interactive-zone" onclick="selectZone('Group ${ch} Rotate CW (Button ${btnCW})', 'rotate_cw', 'light.brightness_step_up')"
+                d="M 152,65 A 64 64 0 0 1 176,122" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round"/>
+              <text x="165" y="55" font-size="9" font-weight="bold" fill="#38bdf8">CW (+)</text>
+              
+              <!-- Rotate CCW -->
+              <path class="interactive-zone" onclick="selectZone('Group ${ch} Rotate CCW (Button ${btnCCW})', 'rotate_ccw', 'light.brightness_step_down')"
+                d="M 68,65 A 64 64 0 0 0 44,122" fill="none" stroke="#818cf8" stroke-width="10" stroke-linecap="round"/>
+              <text x="55" y="55" font-size="9" font-weight="bold" fill="#818cf8">CCW (-)</text>
+              
+              <circle cx="110" cy="215" r="3.5" fill="#64748b"/>
+              
+              <!-- 3-Dots Group Button on Remote -->
+              <g class="interactive-zone" onclick="cycleBilresaChannel()" title="Click to switch group channel">
+                <rect x="52" y="248" width="116" height="54" rx="27" fill="#334155" stroke="#64748b" stroke-width="2"/>
+                <!-- Dot 1 -->
+                <circle cx="84" cy="275" r="6" fill="${dot1Color}" onclick="event.stopPropagation();setBilresaChannel(1)"/>
+                <!-- Dot 2 -->
+                <circle cx="110" cy="275" r="6" fill="${dot2Color}" onclick="event.stopPropagation();setBilresaChannel(2)"/>
+                <!-- Dot 3 -->
+                <circle cx="136" cy="275" r="6" fill="${dot3Color}" onclick="event.stopPropagation();setBilresaChannel(3)"/>
+              </g>
+            </svg>
+          </div>
         `;
-        selectZone('Center Click', 'single_press', 'light.toggle');
         return;
       }
 
@@ -864,31 +1092,30 @@
             <text x="100" y="238" font-size="14" font-weight="bold" fill="#f8fafc" text-anchor="middle" pointer-events="none">▼  OFF</text>
           </svg>
         `;
-        selectZone('Top Button (On/Dim Up)', 'single_press', 'light.turn_on');
         return;
       }
 
-      // Case 3: Standard Decora Smart Wall Rocker (Default)
+      // Default Decora Smart Wall Rocker
       vp.innerHTML = `
         <svg width="200" height="320" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
-          <!-- Wall Plate -->
           <rect x="8" y="8" width="184" height="304" rx="20" fill="#0f172a" stroke="#334155" stroke-width="3"/>
           
-          <!-- Top Paddle -->
           <rect class="interactive-zone" onclick="selectZone('Top Paddle', 'single_press', 'light.turn_on')"
             x="30" y="32" width="140" height="120" rx="12" fill="#1e293b" stroke="#475569" stroke-width="2"/>
           <text x="100" y="98" font-size="15" font-weight="bold" fill="#f8fafc" text-anchor="middle" pointer-events="none">▲  TOP</text>
           
-          <!-- Bottom Paddle -->
           <rect class="interactive-zone" onclick="selectZone('Bottom Paddle', 'single_press', 'light.turn_off')"
             x="30" y="168" width="140" height="120" rx="12" fill="#1e293b" stroke="#475569" stroke-width="2"/>
           <text x="100" y="234" font-size="15" font-weight="bold" fill="#f8fafc" text-anchor="middle" pointer-events="none">▼  BOTTOM</text>
           
-          <!-- LED Indicator Dot -->
           <circle cx="100" cy="160" r="3.5" fill="#38bdf8"/>
         </svg>
       `;
-      selectZone('Top Paddle', 'single_press', 'light.turn_on');
+    }
+
+    function cycleBilresaChannel() {
+      const next = activeBilresaChannel === 3 ? 1 : activeBilresaChannel + 1;
+      setBilresaChannel(next);
     }
 
     function selectZone(name, gesture, defaultService) {
@@ -901,21 +1128,80 @@
       updateAutomationYAML();
     }
 
-    function populateEntitySelect() {
-      const select = document.getElementById('targetEntitySelect');
-      select.innerHTML = '<option value="">-- Select Target Device in Home Assistant --</option>';
-      
-      haEntities.filter(e => ['light', 'switch', 'scene', 'media_player'].includes(e.domain)).forEach(e => {
-        const opt = document.createElement('option');
-        opt.value = e.entity_id;
-        opt.textContent = `${e.name} (${e.entity_id})`;
-        select.appendChild(opt);
+    // Target Entity Search and Picker
+    function setEntityDomainFilter(domain) {
+      currentEntityDomainFilter = domain;
+      document.querySelectorAll('.entity-domain-pills .domain-pill').forEach(el => {
+        el.classList.toggle('active', el.textContent.toLowerCase().includes(domain) || (domain === 'all' && el.textContent.toLowerCase() === 'all'));
       });
+      renderEntityPicker();
+    }
+
+    function renderEntityPicker() {
+      const list = document.getElementById('entityPickerList');
+      list.innerHTML = '';
+
+      const search = (document.getElementById('entitySearchInput').value || '').toLowerCase();
+      const currentSelected = document.getElementById('selectedTargetEntity').value;
+
+      const filtered = haEntities.filter(e => {
+        const matchDomain = currentEntityDomainFilter === 'all' || e.domain === currentEntityDomainFilter;
+        const matchSearch = !search || e.name.toLowerCase().includes(search) || e.entity_id.toLowerCase().includes(search) || (e.area_name || '').toLowerCase().includes(search);
+        return matchDomain && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:1rem;font-size:0.75rem;">No entities found</div>`;
+        return;
+      }
+
+      filtered.forEach(e => {
+        const item = document.createElement('div');
+        const isSel = currentSelected === e.entity_id;
+        item.className = `entity-picker-item ${isSel ? 'selected' : ''}`;
+        item.onclick = () => selectTargetEntity(e);
+
+        let icon = 'mdi-help-circle-outline';
+        if (e.domain === 'light') icon = 'mdi-lightbulb-outline';
+        else if (e.domain === 'switch') icon = 'mdi-power-socket-eu';
+        else if (e.domain === 'scene') icon = 'mdi-palette-outline';
+        else if (e.domain === 'media_player') icon = 'mdi-speaker';
+        else if (e.domain === 'script') icon = 'mdi-code-braces';
+
+        const stateText = e.state || 'off';
+        const stateClass = stateText === 'on' ? 'state-on' : 'state-off';
+
+        item.innerHTML = `
+          <i class="mdi ${icon} entity-item-icon"></i>
+          <div class="entity-item-meta">
+            <div class="entity-item-name">${e.name}</div>
+            <div class="entity-item-sub">${e.entity_id} ${e.area_name ? `• ${e.area_name}` : ''}</div>
+          </div>
+          <span class="entity-item-badge ${stateClass}">${stateText}</span>
+          ${isSel ? '<i class="mdi mdi-check-circle" style="color:var(--success);font-size:1.1rem;margin-left:4px;"></i>' : ''}
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function selectTargetEntity(ent) {
+      document.getElementById('selectedTargetEntity').value = ent.entity_id;
+      
+      // Update channel target label if BILRESA
+      if (selectedDevice && (selectedDevice.name.toLowerCase().includes('bilresa') || selectedDevice.name.toLowerCase().includes('wheel'))) {
+        channelAssignments[activeBilresaChannel] = ent.name;
+        const targetLabel = document.getElementById(`grp${activeBilresaChannel}TargetText`);
+        if (targetLabel) targetLabel.innerText = ent.name;
+      }
+
+      renderEntityPicker();
+      updateAutomationYAML();
+      showToast(`Selected: ${ent.name}`);
     }
 
     function applyPreset(preset, btn) {
       activePreset = preset;
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.preset-grid .preset-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
 
       const svc = document.getElementById('actionServiceSelect');
@@ -951,8 +1237,13 @@
       const devId = selectedDevice ? selectedDevice.id : 'device_id_placeholder';
       const zone = selectedZone ? selectedZone.name : 'Button 1';
       const gesture = document.getElementById('actionGestureSelect').value;
-      const targetEnt = document.getElementById('targetEntitySelect').value || 'light.living_room_light';
+      const targetEnt = document.getElementById('selectedTargetEntity').value || 'light.vardagsrum_tak';
       const service = document.getElementById('actionServiceSelect').value;
+
+      // Extract button index for Matter
+      let btnNum = activeBilresaChannel === 1 ? 3 : (activeBilresaChannel === 2 ? 6 : 9);
+      if (gesture === 'rotate_cw') btnNum = activeBilresaChannel === 1 ? 1 : (activeBilresaChannel === 2 ? 4 : 7);
+      else if (gesture === 'rotate_ccw') btnNum = activeBilresaChannel === 1 ? 2 : (activeBilresaChannel === 2 ? 5 : 8);
 
       let conditionsYAML = '';
       if (activeConditions.includes('sun_after_sunset')) {
@@ -974,15 +1265,19 @@
         actionDataYAML = `\n    data:\n      brightness_pct: 10\n      color_temp_kelvin: 2200`;
       }
 
-      const yamlText = `- id: switchmatrix_${devId.slice(0, 8)}_${gesture}
-  alias: "SwitchMatrix: ${devName} [${zone}] -> ${service}"
+      const entityTrigger = selectedDevice && selectedDevice.event_entities && selectedDevice.event_entities.length >= btnNum
+        ? selectedDevice.event_entities[btnNum - 1]
+        : `event.${devName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_button_${btnNum}`;
+
+      const yamlText = `- id: switchmatrix_${devId.slice(0, 8)}_g${activeBilresaChannel}_b${btnNum}
+  alias: "SwitchMatrix: ${devName} [Group ${activeBilresaChannel}] -> ${service}"
   description: "Generated by SwitchMatrix Visual Switch Automation Builder"
   mode: restart
   trigger:
     - platform: state
-      entity_id: event.${devName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_button
+      entity_id: ${entityTrigger}
       attribute: event_type
-      to: "${gesture}"${conditionsYAML ? `\n  condition:${conditionsYAML}` : ''}
+      to: "press"${conditionsYAML ? `\n  condition:${conditionsYAML}` : ''}
   action:
     - service: ${service}
       target:
@@ -999,7 +1294,7 @@
 
     async function testActionNow() {
       const service = document.getElementById('actionServiceSelect').value;
-      const entity = document.getElementById('targetEntitySelect').value;
+      const entity = document.getElementById('selectedTargetEntity').value;
       if (!entity) {
         showToast('⚠️ Please select a target entity first');
         return;
@@ -1015,7 +1310,7 @@
     }
 
     async function saveAutomationToHA() {
-      const targetEnt = document.getElementById('targetEntitySelect').value;
+      const targetEnt = document.getElementById('selectedTargetEntity').value;
       if (!targetEnt) {
         showToast('⚠️ Please select a target entity before saving');
         return;
@@ -1024,32 +1319,43 @@
       const service = document.getElementById('actionServiceSelect').value;
       const zone = selectedZone ? selectedZone.name : 'Button';
       const gesture = document.getElementById('actionGestureSelect').value;
+      const ch = activeBilresaChannel || 1;
 
-      const flowData = {
-        id: `switchmatrix_${selectedDevice ? selectedDevice.id.slice(0, 8) : 'custom'}_${gesture}`,
-        device_id: selectedDevice ? selectedDevice.id : null,
-        zone_label: `${selectedDevice ? selectedDevice.name : 'Switch'} (${zone})`,
-        action_type: gesture,
-        protocol: selectedDevice ? selectedDevice.protocol : 'matter',
-        conditions: activeConditions.map(c => ({ type: c })),
-        action: {
-          service: service,
-          target_entity: targetEnt,
-          preset: activePreset,
-        }
-      };
+      // Determine target key for backend
+      let targetKey = `g${ch}_wheel_center`;
+      if (gesture === 'rotate_cw') targetKey = `g${ch}_wheel_cw`;
+      else if (gesture === 'rotate_ccw') targetKey = `g${ch}_wheel_ccw`;
+
+      const isBilresa = selectedDevice && (selectedDevice.name.toLowerCase().includes('bilresa') || selectedDevice.name.toLowerCase().includes('wheel'));
 
       showToast('💾 Saving automation to Home Assistant...');
       try {
-        const res = await callAPI('/api/visual_switch_manager/mappings', {
-          [selectedDevice ? selectedDevice.id : 'switch']: {
+        const payload = {
+          [selectedDevice ? selectedDevice.id : 'bilresa_wheel']: {
             assigned_device_id: selectedDevice ? selectedDevice.id : '',
+            assigned_device_name: selectedDevice ? selectedDevice.name : '',
+            [`group_${ch}_entity`]: targetEnt,
             mappings: {
-              [gesture]: { service, entity: targetEnt, label: zone, trigger: gesture }
+              [targetKey]: { service, entity: targetEnt, label: zone, trigger: gesture },
+              [gesture]: { service, entity: targetEnt, label: zone, trigger: gesture },
             }
           }
-        });
-        showToast('✅ Automation saved & reloaded in Home Assistant!');
+        };
+
+        if (isBilresa) {
+          payload["bilresa_wheel"] = {
+            assigned_device_id: selectedDevice ? selectedDevice.id : '',
+            assigned_device_name: selectedDevice ? selectedDevice.name : '',
+            [`group_${ch}_entity`]: targetEnt,
+            mappings: {
+              [targetKey]: { service, entity: targetEnt, label: zone, trigger: gesture },
+              [gesture]: { service, entity: targetEnt, label: zone, trigger: gesture },
+            }
+          };
+        }
+
+        await callAPI('/api/visual_switch_manager/mappings', payload);
+        showToast(`✅ Assigned Group ${ch} to ${targetEnt} successfully!`);
       } catch (e) {
         showToast(`❌ Save error: ${e}`);
       }
@@ -1065,10 +1371,6 @@
 
     function filterDevices() {
       renderDeviceList();
-    }
-
-    function toggleSavedModal() {
-      showToast('Automations management active in Home Assistant Automations menu');
     }
 
     // Initialize on window load

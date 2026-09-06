@@ -155,12 +155,30 @@ async def async_get_discovered_devices(hass: HomeAssistant) -> list[dict[str, An
             continue
 
         dev_entities = device_to_entities.get(dev.id, [])
-        has_event = any(e.domain == "event" for e in dev_entities)
-        has_switch = any(e.domain == "switch" for e in dev_entities)
+        domains = {e.domain for e in dev_entities}
+
+        # Explicitly exclude non-switch sensors (leak, motion, door/window, smoke)
+        non_switch_keywords = [
+            "vattenläck", "leak", "moisture", "water", 
+            "motionsensor", "rörelse", "motion", "occupancy", "presence",
+            "dörr", "fönster", "door", "window", "contact sensor",
+            "smoke", "rök", "temperat", "humidity", "luftfuktighet"
+        ]
+        if any(k in search_str for k in non_switch_keywords) and "event" not in domains:
+            continue
+
+        # Exclude standalone light bulbs/fixtures
+        if "light" in domains and "event" not in domains and "switch" not in domains:
+            is_named_controller = any(k in search_str for k in ["remote", "controller", "knapp", "button", "styrbar", "bilresa", "somrig", "rodret", "dimmer", "wall switch"])
+            if not is_named_controller:
+                continue
+
+        has_event = "event" in domains
+        has_switch = "switch" in domains
         is_controller_name = any(
             k in search_str
             for k in [
-                "remote", "switch", "button", "dial", "wheel", "styrbar", "bilresa",
+                "remote", "switch", "button", "knapp", "dial", "wheel", "styrbar", "bilresa",
                 "somrig", "rodret", "tradfri", "dimmer", "symfonisk", "opple", "cube",
                 "shelly", "sonoff", "hue dimmer", "wall switch", "keypad",
             ]

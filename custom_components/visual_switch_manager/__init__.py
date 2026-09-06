@@ -120,14 +120,44 @@ class VisualSwitchManagerDevicesView(HomeAssistantView):
             "tts", "stt", "ai agent", "forecast", "speedtest", "hacs", "updater"
         ]
 
-        # Allowed integration domains for remotes
-        remote_domains = {"matter", "zha", "mqtt", "deconz", "hue", "bthome", "shelly", "esphome", "lutron_caseta", "tasmota"}
-
-        # Find all device IDs that have event entities or battery or switch entities
-        dev_entities = {}
+        device_entities = {}
         for ent in ent_reg.entities.values():
             if ent.device_id:
-                dev_entities.setdefault(ent.device_id, []).append(ent.domain)
+                device_entities.setdefault(ent.device_id, []).append(ent)
+
+        area_reg = ar.async_get(hass)
+
+        def _get_protocol(dev, ent_list):
+            ident_domains = [
+                ident[0].lower()
+                for ident in dev.identifiers
+                if isinstance(ident, (list, tuple)) and len(ident) > 0
+            ]
+            if "matter" in ident_domains:
+                return "matter"
+            if "zha" in ident_domains:
+                return "zha"
+            if "mqtt" in ident_domains:
+                return "zigbee2mqtt"
+            if "zwave_js" in ident_domains:
+                return "zwave_js"
+            if "shelly" in ident_domains:
+                return "shelly"
+            if "esphome" in ident_domains:
+                return "esphome"
+            for e in ent_list:
+                platform = (e.platform or "").lower()
+                if "matter" in platform:
+                    return "matter"
+                if "zha" in platform:
+                    return "zha"
+                if "mqtt" in platform:
+                    return "zigbee2mqtt"
+                if "zwave" in platform:
+                    return "zwave_js"
+                if "shelly" in platform:
+                    return "shelly"
+            return "generic"
 
         devices = []
         for dev in dev_reg.devices.values():
@@ -140,24 +170,61 @@ class VisualSwitchManagerDevicesView(HomeAssistantView):
             if any(kw in full_str for kw in excluded_keywords):
                 continue
 
-            # Check if device has event entities or is from a remote domain or has remote/switch in name/model
-            has_events = "event" in dev_entities.get(dev.id, [])
-            is_remote_domain = any(ident[0] in remote_domains for ident in dev.identifiers if isinstance(ident, (list, tuple)) and len(ident) > 0)
-            is_remote_named = any(k in full_str for k in ["remote", "switch", "button", "dial", "wheel", "styrbar", "bilresa", "somrig", "rodret", "tradfri", "dimmer", "symfonisk", "opple", "cube", "smart plug", "inspelning"])
+            ents = device_entities.get(dev.id, [])
+            domains = {e.domain for e in ents}
 
-            if has_events or is_remote_domain or is_remote_named:
-                devices.append({
-                    "id": dev.id,
-                    "name": name or f"{manufacturer} {model}".strip() or "Unnamed Remote",
-                    "manufacturer": manufacturer or "Generic",
-                    "model": model or "Remote / Switch",
-                    "area_id": dev.area_id,
-                    "has_events": has_events,
-                    "identifiers": [list(i) for i in dev.identifiers],
-                })
+            # Explicitly exclude non-switch sensors (leak, motion, door/window, smoke)
+            non_switch_keywords = [
+                "vattenläck", "leak", "moisture", "water", 
+                "motionsensor", "rörelse", "motion", "occupancy", "presence",
+                "dörr", "fönster", "door", "window", "contact sensor",
+                "smoke", "rök", "temperat", "humidity", "luftfuktighet"
+            ]
+            if any(k in full_str for k in non_switch_keywords) and "event" not in domains:
+                continue
+
+            # Exclude standalone light bulbs/fixtures
+            if "light" in domains and "event" not in domains and "switch" not in domains:
+                is_named_controller = any(k in full_str for k in ["remote", "controller", "knapp", "button", "styrbar", "bilresa", "somrig", "rodret", "dimmer", "wall switch"])
+                if not is_named_controller:
+                    continue
+
+            has_events = "event" in domains
+            has_switch = "switch" in domains
+            is_switch_named = any(k in full_str for k in [
+                "remote", "switch", "button", "knapp", "dial", "wheel", "styrbar", "bilresa",
+                "somrig", "rodret", "tradfri", "dimmer", "symfonisk", "opple", "cube",
+                "smart plug", "inspelning", "wall switch", "scene", "keypad"
+            ])
+
+            if not (has_events or has_switch or is_switch_named):
+                continue
+
+            protocol = _get_protocol(dev, ents)
+            area_name = "Unassigned"
+            if dev.area_id:
+                area_entry = area_reg.async_get_area(dev.area_id)
+                if area_entry:
+                    area_name = area_entry.name
+
+            event_ents = [e.entity_id for e in ents if e.domain == "event"]
+
+            devices.append({
+                "id": dev.id,
+                "name": name or f"{manufacturer} {model}".strip() or "Unnamed Switch",
+                "manufacturer": manufacturer or "Generic",
+                "model": model or "Remote / Switch",
+                "protocol": protocol,
+                "area_id": dev.area_id,
+                "area_name": area_name,
+                "has_events": has_events,
+                "event_entities": event_ents,
+                "entity_count": len(ents),
+                "identifiers": [list(i) for i in dev.identifiers],
+            })
 
         # Sort so devices with event entities or remotes appear first
-        devices.sort(key=lambda d: (not d.get("has_events"), d["name"]))
+        devices.sort(key=lambda d: (not d.get("has_events"), d["name"].lower()))
         return self.json(devices)
 
 class VisualSwitchManagerTestActionView(HomeAssistantView):
@@ -281,7 +348,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mappings = dev_data.get("mappings", dev_data)
 
             target_key = None
-            if blueprint_id == "bilresa_wheel":
+            is_bilresa = (
+                blueprint_id == "bilresa_wheel"
+                or "bilresa" in str(blueprint_id).lower()
+                or "bilresa" in str(dev_data.get("name", "")).lower()
+                or "scroll" in str(dev_data.get("name", "")).lower()
+                or "wheel" in str(dev_data.get("name", "")).lower()
+                or dev_data.get("form_factor") == "scroll_wheel"
+                or any(k.startswith("g1_") or k.startswith("g2_") or k.startswith("g3_") for k in mappings.keys())
+                or dev_data.get("group_1_entity") is not None
+            )
+
+            if is_bilresa:
                 # Channel 1: 3=Center Press, 1=Rotate Right (CW), 2=Rotate Left (CCW)
                 if btn_num == 3: target_key = "g1_wheel_center"
                 elif btn_num == 1: target_key = "g1_wheel_cw"
@@ -327,19 +405,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     await async_execute_mapping_action(hass, action_info)
                     return
 
+            # Check gesture fallbacks (e.g. single_press, rotate_cw, rotate_ccw)
+            if btn_num in (3, 6, 9) and "single_press" in mappings:
+                action_info = mappings["single_press"]
+                if action_info and isinstance(action_info, dict) and "service" in action_info:
+                    _LOGGER.warning("Visual Switch Manager: Executing single_press fallback action: %s", action_info)
+                    await async_execute_mapping_action(hass, action_info)
+                    return
+            elif btn_num in (1, 4, 7) and "rotate_cw" in mappings:
+                action_info = mappings["rotate_cw"]
+                if action_info and isinstance(action_info, dict) and "service" in action_info:
+                    _LOGGER.warning("Visual Switch Manager: Executing rotate_cw fallback action: %s", action_info)
+                    await async_execute_mapping_action(hass, action_info)
+                    return
+            elif btn_num in (2, 5, 8) and "rotate_ccw" in mappings:
+                action_info = mappings["rotate_ccw"]
+                if action_info and isinstance(action_info, dict) and "service" in action_info:
+                    _LOGGER.warning("Visual Switch Manager: Executing rotate_ccw fallback action: %s", action_info)
+                    await async_execute_mapping_action(hass, action_info)
+                    return
+
             # Check if group lamp was assigned directly for that group (e.g. group_1_entity)
-            if blueprint_id == "bilresa_wheel":
+            if is_bilresa:
                 g_idx = 1 if btn_num in (1, 2, 3) else (2 if btn_num in (4, 5, 6) else (3 if btn_num in (7, 8, 9) else None))
                 if g_idx:
                     group_entity = dev_data.get(f"group_{g_idx}_entity")
                     if group_entity:
                         if btn_num in (3, 6, 9):
+                            _LOGGER.warning("Visual Switch Manager: Group %s Toggle on %s", g_idx, group_entity)
                             await async_execute_mapping_action(hass, {"service": "light.toggle", "entity": group_entity})
                             return
                         elif btn_num in (1, 4, 7):
+                            _LOGGER.warning("Visual Switch Manager: Group %s Brightness Up on %s", g_idx, group_entity)
                             await async_execute_mapping_action(hass, {"service": "light.brightness_step_up", "entity": group_entity})
                             return
                         elif btn_num in (2, 5, 8):
+                            _LOGGER.warning("Visual Switch Manager: Group %s Brightness Down on %s", g_idx, group_entity)
                             await async_execute_mapping_action(hass, {"service": "light.brightness_step_down", "entity": group_entity})
                             return
 
